@@ -216,3 +216,7 @@ if debug:
     targetVisited = 10
     scrape(seedUrl, targetVisited, None)
     outputDatabase('spideydb.json')
+
+# bugs remaining:
+# 1. the bfs queue seems to not be going across, and instead is going down, check if at insertion to db or at reading
+# 2. there's probably more
