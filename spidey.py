@@ -1,10 +1,11 @@
+import sys
+import os
 import requests
 import string
 from tinydb import TinyDB, Query
 from bs4 import BeautifulSoup
 from nltk.stem import PorterStemmer
-import sys
-import os
+from collections import deque
 
 # creating a web scraper with beautifulsoup & requests & tinydb to get X pages from the url 
 # and index the data before storing it in a database
@@ -12,8 +13,11 @@ import os
 # the test url
 testUrl = 'https://cse.hkust.edu.hk/'
 
-# the number of pages to scrape (for testing)
-pagesCount = 2
+# the visited set
+visited = set()
+
+# inverted index
+invertedIndex = {}
 
 # stopword list, imported from a .txt file
 stopwords = []
@@ -31,45 +35,80 @@ except OSError:
 db = TinyDB('spideydb.json')
 pages_table = db.table('pages')
 
-# defining the schema
+# function to update the inverted index
+# this takes in the list of words from a page
+# updates the inverted index to contain for each word:
+# a list of urls that contain that word
+# the frequency of that word in that url (document)
+# the positions of that word in that url (document)
+def updateInvertedIndex(words, url):
+    for i, word in enumerate(words):
+        if word not in invertedIndex:
+            # if the word is not in the inverted index, add it (and the url for the new document)
+            invertedIndex[word] = {url: {"frequency": 1, "positions": [i]}}
+        else:
+            # if the word is in the inverted index, but the document is not, add the document
+            if url not in invertedIndex[word]:
+                invertedIndex[word][url] = {"frequency": 1, "positions": [i]}
+            else:
+                # if the word and the document are both in the inverted index, update the frequency and positions
+                invertedIndex[word][url]["frequency"] += 1
+                invertedIndex[word][url]["positions"].append(i)
+    return invertedIndex
+    
+# stow the inverted index into the tinydb database (double check this function later)
+def stowInvertedIndex():
+    invertedIndex_table = db.table('invertedIndex')
+    invertedIndex_table.insert(invertedIndex)
 
 # from each page, we need to get the page title, page url, last modification date, size of page (in characters)
 # and the first 10 links on the page, as well as top 10 keywords along with their frequency
 
 # the function to recursively scrape the pages
-def scrape(startUrl, pagesCount):
+def scrape(curUrl, targetVisited, parentUrl):
     # base case
-    if pagesCount == 0:
+    if curUrl in visited:
+        return
+    elif len(visited) >= targetVisited:
         return
     else:
-        # get page
-        page = requests.get(startUrl)
+        page = requests.get(curUrl)
         # parse page
         soup = BeautifulSoup(page.content, 'html.parser')
-        # get title
         title = soup.title.string
-        # get url
-        curUrl = page.url
-        # get last modified date
-        lastModified = soup.find('p', class_= 'copyright').child.text
-        # get size of page
-        size = len(page.text)
+        
+        # get last modified date from http header, if it doesn't exist use the date field from the html
+        if 'Last-Modified' in page.headers:
+            lastModified = page.headers['Last-Modified']
+        else:
+            lastModified = page.headers['Date']
+
+        # get the size as the content length from the http header, if it doesn't exist use the length of the html
+        if 'Content-Length' in page.headers:
+            size = int(page.headers['Content-Length'])
+        else:
+            size = len(page.content)
+
         # get first 10 links
-        links = soup.find_all('a', limit=10)
+        links = soup.find_all('a', limit=100)
+        # make links the list of extracted hrefs
+        links = [link.get('href') for link in links]
+        first10Links = []
+        for i in range(len(links)):
+            if len(first10Links) >= 10:
+                break
+            first10Links.append(links[i])
         # get top 10 keywords
         # this means getting all text from the page, removing punctuation, 
         # stemming with porter's, ignoring stopwords, 
         # and then counting the frequency of each word
         # we will use a dictionary to store the words and their frequencies
 
-        # get all text from the page
         text = soup.get_text()
         # remove punctuation
         text = text.translate(str.maketrans('', '', string.punctuation))
-        # split into words
-        words = text.split()
+        words = text.lower().split()
         # stem with porter's
-        # for now, we will use NTLK's porter stemmer (may change later if not allowed)
         ps = PorterStemmer()
         stemmedWords = []
         for word in words:
@@ -94,15 +133,26 @@ def scrape(startUrl, pagesCount):
         for i in range(10):
             top10Frequencies.append(sortedWordFreq[i][1])
         
+        # update the inverted index
+        invertedIndex = updateInvertedIndex(filteredWords, curUrl)
+
         # insert into database
-        pages_table.insert({'title': title, 'url': curUrl, 'lastModified': lastModified, 'size': size, 'links': links, 'top10Keywords': top10Keywords, 'top10Frequencies': top10Frequencies})
+        pages_table.insert({'title': title, 'url': curUrl, 'lastModified': lastModified, 'size': size, 'childLinks': first10Links, 'top10Keywords': top10Keywords, 'top10Frequencies': top10Frequencies, 'parentPage': parentUrl ,'text': text})
 
-        # decrement pagesCount
-        pagesCount -= 1
+        # add to visited set
+        visited.add(curUrl)
 
-        # move on to the next page to keep scraping until pagesCount == 0
+        # move on to the next page to keep scraping until we reach the target number of pages or we run out of pages to scrape
         # we are doing so in a breadth-first manner
         # we will use a queue to keep track of the pages to scrape
+        # we will use a set to keep track of the pages we have already visited (faster than checking the database)
 
+        # create a queue of links in breadth-first order to scrape
+        bfsQueue = deque(links)
 
-        # temp note - make sure to implement a parent page field in the database, the first page will have a parent page of None
+        # start scraping
+        while bfsQueue:
+            nextLink = bfsQueue.popleft()
+            if nextLink not in visited:
+                scrape(nextLink, targetVisited, curUrl)
+        
