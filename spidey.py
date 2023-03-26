@@ -10,8 +10,7 @@ from collections import deque
 # creating a web scraper with beautifulsoup & requests & tinydb to get X pages from the url 
 # and index the data before storing it in a database
 
-# the test url
-testUrl = 'https://cse.hkust.edu.hk/'
+debug = True
 
 # the visited set
 visited = set()
@@ -89,10 +88,16 @@ def scrape(curUrl, targetVisited, parentUrl):
         else:
             size = len(page.content)
 
+        # get first 100 links (we have some limiters to make sure we don't get too many links)
+        links = []
+        for link in soup.find_all('a', limit=200):
+            href = link.get('href')
+            if href is not None and href.startswith('http'):
+                links.append(href)
+            if len(links) >= 100:
+                break
+        
         # get first 10 links
-        links = soup.find_all('a', limit=100)
-        # make links the list of extracted hrefs
-        links = [link.get('href') for link in links]
         first10Links = []
         for i in range(len(links)):
             if len(first10Links) >= 10:
@@ -128,7 +133,9 @@ def scrape(curUrl, targetVisited, parentUrl):
         # sort the dictionary by frequency
         sortedWordFreq = sorted(wordFreq.items(), key=lambda x: x[1], reverse=True)
         # get top 10 keywords and the top 10 frequencies
-        top10Keywords = sortedWordFreq[:10]
+        top10Keywords = []
+        for i in range(10):
+            top10Keywords.append(sortedWordFreq[i][0])
         top10Frequencies = []
         for i in range(10):
             top10Frequencies.append(sortedWordFreq[i][1])
@@ -156,3 +163,56 @@ def scrape(curUrl, targetVisited, parentUrl):
             if nextLink not in visited:
                 scrape(nextLink, targetVisited, curUrl)
         
+# database output function
+# this function will output the database to a .txt file called spider_results.txt
+# the form of the output is as follows:
+# Page title
+# URL
+# Last modification date, size of page
+# Keyword1 freq1; Keyword2 freq2; Keyword3 freq3; ... ...
+# Child Link1
+# Child Link2 ... ...
+# ——————————————————————————————
+# next page
+
+def outputDatabase(databaseFile):
+    db = TinyDB(databaseFile)
+    pageTable = db.table('pages')
+
+    # if the file already exists, delete it
+    if os.path.exists('spider_results.txt'):
+        os.remove('spider_results.txt')
+
+    for page in pageTable.all():
+        # get data from page
+        title = page['title']
+        url = page['url']
+        lastModified = page['lastModified']
+        size = page['size']
+        childLinks = page['childLinks']
+        top10Keywords = page['top10Keywords']
+        top10Frequencies = page['top10Frequencies']
+
+        # format data
+        output = f"{title}\n{url}\n{lastModified}, {size}\n"
+        for i in range(len(top10Keywords)):
+            output += f"{top10Keywords[i]} {top10Frequencies[i]};\n"
+        for link in childLinks:
+            output += f"{link}\n"
+        output += "——————————————————————————————\n"
+
+        # write to file
+        with open('spider_results.txt', 'a') as f:
+            f.write(output)
+
+# function execution
+#seedUrl = sys.argv[1]
+#targetVisited = int(sys.argv[2])
+#scrape(seedUrl, targetVisited, None)
+
+# debugging execution
+if debug:
+    seedUrl = 'https://cse.hkust.edu.hk/'
+    targetVisited = 10
+    scrape(seedUrl, targetVisited, None)
+    outputDatabase('spideydb.json')
