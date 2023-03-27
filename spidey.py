@@ -1,22 +1,26 @@
-import sys
-import os
-import requests
-import string
+import sys, os, requests, string
 from tinydb import TinyDB, Query
 from bs4 import BeautifulSoup
 from nltk.stem import PorterStemmer
 from collections import deque
+from spideyTest import outputDatabase
+import urllib3
+
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 # creating a web scraper with beautifulsoup & requests & tinydb to get X pages from the url 
 # and index the data before storing it in a database
 
-debug = True
+debug = False
 
 # the visited set
 visited = set()
 
 # inverted index
 invertedIndex = {}
+
+# the BFS queue initialization
+bfsQueue = deque()
 
 # stopword list, imported from a .txt file
 stopwords = []
@@ -64,17 +68,22 @@ def stowInvertedIndex():
 # and the first 10 links on the page, as well as top 10 keywords along with their frequency
 
 # the function to recursively scrape the pages
-def scrape(curUrl, targetVisited, parentUrl):
+def scrape(curUrl, targetVisited, parentUrl, bfsQueue):
     # base case
     if curUrl in visited:
         return
     elif len(visited) >= targetVisited:
         return
     else:
-        page = requests.get(curUrl)
+        page = requests.get(curUrl, verify=False)
         # parse page
         soup = BeautifulSoup(page.content, 'html.parser')
-        title = soup.title.string
+        title = soup.title
+        # check if the title is None, if so set it to No Title Given
+        if title is None:
+            title = "No Title Given"
+        else:
+            title = title.string
         
         # get last modified date from http header, if it doesn't exist use the date field from the html
         if 'Last-Modified' in page.headers:
@@ -132,19 +141,18 @@ def scrape(curUrl, targetVisited, parentUrl):
                 wordFreq[word] = 1
         # sort the dictionary by frequency
         sortedWordFreq = sorted(wordFreq.items(), key=lambda x: x[1], reverse=True)
-        # get top 10 keywords and the top 10 frequencies
-        top10Keywords = []
-        for i in range(10):
-            top10Keywords.append(sortedWordFreq[i][0])
-        top10Frequencies = []
-        for i in range(10):
-            top10Frequencies.append(sortedWordFreq[i][1])
+        # seperate things out into lists
+        sortedKeywords = []
+        sortedFrequencies = []
+        for i in range(len(sortedWordFreq)):
+            sortedKeywords.append(sortedWordFreq[i][0])
+            sortedFrequencies.append(sortedWordFreq[i][1])
         
         # update the inverted index
         invertedIndex = updateInvertedIndex(filteredWords, curUrl)
 
         # insert into database
-        pages_table.insert({'title': title, 'url': curUrl, 'lastModified': lastModified, 'size': size, 'childLinks': first10Links, 'top10Keywords': top10Keywords, 'top10Frequencies': top10Frequencies, 'parentPage': parentUrl ,'text': text})
+        pages_table.insert({'title': title, 'url': curUrl, 'lastModified': lastModified, 'size': size, 'childLinks': links, 'sortedKeywords': sortedKeywords, 'sortedFrequencies': sortedFrequencies, 'parentPage': parentUrl ,'text': text})
 
         # add to visited set
         visited.add(curUrl)
@@ -155,68 +163,24 @@ def scrape(curUrl, targetVisited, parentUrl):
         # we will use a set to keep track of the pages we have already visited (faster than checking the database)
 
         # create a queue of links in breadth-first order to scrape
-        bfsQueue = deque(links)
+
+        bfsQueue.extend(link for link in links if link not in visited)
 
         # start scraping
         while bfsQueue:
             nextLink = bfsQueue.popleft()
-            if nextLink not in visited:
-                scrape(nextLink, targetVisited, curUrl)
-        
-# database output function
-# this function will output the database to a .txt file called spider_results.txt
-# the form of the output is as follows:
-# Page title
-# URL
-# Last modification date, size of page
-# Keyword1 freq1; Keyword2 freq2; Keyword3 freq3; ... ...
-# Child Link1
-# Child Link2 ... ...
-# ——————————————————————————————
-# next page
-
-def outputDatabase(databaseFile):
-    db = TinyDB(databaseFile)
-    pageTable = db.table('pages')
-
-    # if the file already exists, delete it
-    if os.path.exists('spider_results.txt'):
-        os.remove('spider_results.txt')
-
-    for page in pageTable.all():
-        # get data from page
-        title = page['title']
-        url = page['url']
-        lastModified = page['lastModified']
-        size = page['size']
-        childLinks = page['childLinks']
-        top10Keywords = page['top10Keywords']
-        top10Frequencies = page['top10Frequencies']
-
-        # format data
-        output = f"{title}\n{url}\n{lastModified}, {size}\n"
-        for i in range(len(top10Keywords)):
-            output += f"{top10Keywords[i]} {top10Frequencies[i]};\n"
-        for link in childLinks:
-            output += f"{link}\n"
-        output += "——————————————————————————————\n"
-
-        # write to file
-        with open('spider_results.txt', 'a') as f:
-            f.write(output)
-
-# function execution
-#seedUrl = sys.argv[1]
-#targetVisited = int(sys.argv[2])
-#scrape(seedUrl, targetVisited, None)
+            if nextLink not in visited and not None:
+                scrape(nextLink, targetVisited, curUrl, bfsQueue)
 
 # debugging execution
 if debug:
     seedUrl = 'https://cse.hkust.edu.hk/'
     targetVisited = 10
-    scrape(seedUrl, targetVisited, None)
+    scrape(seedUrl, targetVisited, None, bfsQueue)
+    stowInvertedIndex()
     outputDatabase('spideydb.json')
-
-# bugs remaining:
-# 1. the bfs queue seems to not be going across, and instead is going down, check if at insertion to db or at reading
-# 2. there's probably more
+else: # command line execution for spideyTest.py & TAs
+    seedUrl = sys.argv[1]
+    targetVisited = int(sys.argv[2])
+    scrape(seedUrl, targetVisited, None, bfsQueue)
+    stowInvertedIndex()
