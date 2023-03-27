@@ -1,0 +1,634 @@
+Department of Computer Science and Engineering - HKUST
+http://www.cse.ust.hk/
+Mon, 27 Mar 2023 14:54:36 GMT, 48268
+research 14;
+hkust 12;
+learn 12;
+postgradu 10;
+2023 9;
+student 9;
+comput 8;
+alumni 8;
+2022 8;
+news 7;
+https://hkust.edu.hk/news
+https://hkust.edu.hk/academics/list
+https://hkust.edu.hk/lifehkust
+https://library.hkust.edu.hk/
+https://hkust.edu.hk/visit
+https://hkustcareers.hkust.edu.hk/
+https://facultyprofiles.hkust.edu.hk/
+https://hkust.edu.hk/about
+https://seng.hkust.edu.hk/
+https://hkust.edu.hk/
+——————————————————————————————
+News | The Hong Kong University of Science and Technology
+https://hkust.edu.hk/news
+Mon, 27 Mar 2023 14:54:40 GMT, 15632
+hkust 27;
+school 18;
+scienc 15;
+student 15;
+research 15;
+news 13;
+univers 11;
+technolog 11;
+institut 11;
+program 10;
+https://hkust-gz.edu.cn/
+https://shaw-auditorium.hkust.edu.hk/
+https://calendar.ust.hk
+https://giving.hkust.edu.hk/en/index.php
+https://alum.hkust.edu.hk/home
+https://hkustcareers.ust.hk/
+https://hkust.edu.hk/stu_intranet/
+https://my-ai.ust.hk
+https://hkust.edu.hk/
+https://science.ust.hk/
+——————————————————————————————
+Academic Departments | The Hong Kong University of Science and Technology
+https://hkust.edu.hk/academics/list
+Mon, 27 Mar 2023 14:54:42 GMT, 16554
+center 102;
+research 70;
+institut 45;
+hkust 41;
+depart 40;
+scienc 35;
+engin 33;
+technolog 31;
+laboratori 31;
+facil 30;
+https://hkust-gz.edu.cn/
+https://shaw-auditorium.hkust.edu.hk/
+https://calendar.ust.hk
+https://giving.hkust.edu.hk/en/index.php
+https://alum.hkust.edu.hk/home
+https://hkustcareers.ust.hk/
+https://hkust.edu.hk/stu_intranet/
+https://my-ai.ust.hk
+https://hkust.edu.hk/
+https://science.ust.hk/
+——————————————————————————————
+Best Study Abroad Programs|Vibrant Study Experience in Hong Kong||HKUST
+https://hkust.edu.hk/lifehkust
+Mon, 27 Mar 2023 14:54:42 GMT, 17895
+student 73;
+hong 68;
+studi 65;
+kong 56;
+program 46;
+univers 36;
+hkust 32;
+abroad 26;
+scienc 25;
+school 24;
+https://hkust-gz.edu.cn/
+https://shaw-auditorium.hkust.edu.hk/
+https://calendar.ust.hk
+https://giving.hkust.edu.hk/en/index.php
+https://alum.hkust.edu.hk/home
+https://hkustcareers.ust.hk/
+https://hkust.edu.hk/stu_intranet/
+https://my-ai.ust.hk
+https://hkust.edu.hk/
+https://science.ust.hk/
+——————————————————————————————
+HKUST Library
+https://library.hkust.edu.hk/
+Mon, 27 Mar 2023 14:54:43 GMT, 14327
+librari 28;
+hkust 17;
+search 13;
+guid 11;
+research 9;
+collect 9;
+univers 7;
+databas 7;
+resourc 6;
+cours 6;
+https://hkust.edu.hk/news
+https://hkust.edu.hk/academics/list
+https://hkust.edu.hk/lifehkust
+https://library.hkust.edu.hk
+https://hkust.edu.hk/map-directions
+https://hkustcareers.ust.hk/
+https://facultyprofiles.ust.hk/
+https://hkust.edu.hk/about
+https://www.ust.hk/
+https://hkust.edu.hk/news
+——————————————————————————————
+Visit | The Hong Kong University of Science and Technology
+https://hkust.edu.hk/visit
+Mon, 27 Mar 2023 14:54:44 GMT, 14702
+hkust 30;
+school 18;
+mtr 14;
+student 13;
+station 13;
+scienc 11;
+univers 10;
+program 10;
+institut 10;
+research 10;
+https://hkust-gz.edu.cn/
+https://shaw-auditorium.hkust.edu.hk/
+https://calendar.ust.hk
+https://giving.hkust.edu.hk/en/index.php
+https://alum.hkust.edu.hk/home
+https://hkustcareers.ust.hk/
+https://hkust.edu.hk/stu_intranet/
+https://my-ai.ust.hk
+https://hkust.edu.hk/
+https://science.ust.hk/
+——————————————————————————————
+Home | CAREERS AT HKUST
+https://hkustcareers.hkust.edu.hk/
+Mon, 27 Mar 2023 14:54:44 GMT, 41816
+hkust 28;
+hong 16;
+kong 16;
+univers 12;
+campu 12;
+research 8;
+water 6;
+bay 6;
+guangzhou 6;
+intern 6;
+https://www.ust.hk/news
+https://www.ust.hk/academics/list
+https://www.ust.hk/lifehkust
+http://library.ust.hk/
+https://www.ust.hk/map-directions
+https://hkustcareers.ust.hk
+https://facultyprofiles.ust.hk/
+https://www.ust.hk/about
+https://hro.hkust.edu.hk
+https://www.ust.hk
+——————————————————————————————
+Faculty Profiles | The Hong Kong University of Science and Technology
+https://facultyprofiles.hkust.edu.hk/
+Mon, 27 Mar 2023 14:54:44 GMT, 3392
+univers 4;
+hong 3;
+kong 3;
+scienc 3;
+technolog 3;
+hkust 3;
+browser 3;
+faculti 2;
+profil 2;
+offic 2;
+https://www.ust.hk/news
+https://www.ust.hk/academics/list
+https://www.ust.hk/lifehkust
+http://library.ust.hk/
+https://www.ust.hk/map-directions
+https://www.ab.ust.hk/hro/PubDoc/careers/main.html?btn1=btn_nav_06&main=welcome.html
+https://www.ust.hk/about-hkust
+https://hkust.edu.hk/
+https://hkust-gz.edu.cn/
+https://facultyprofiles.hkust-gz.edu.cn/
+——————————————————————————————
+QS Top 10 Universities in China by subject|HKUST
+https://hkust.edu.hk/about
+Mon, 27 Mar 2023 14:54:45 GMT, 23169
+univers 118;
+hkust 68;
+read 65;
+rank 54;
+hong 42;
+kong 39;
+wa 37;
+research 30;
+world 29;
+scienc 26;
+https://hkust-gz.edu.cn/
+https://shaw-auditorium.hkust.edu.hk/
+https://calendar.ust.hk
+https://giving.hkust.edu.hk/en/index.php
+https://alum.hkust.edu.hk/home
+https://hkustcareers.ust.hk/
+https://hkust.edu.hk/stu_intranet/
+https://my-ai.ust.hk
+https://hkust.edu.hk/
+https://science.ust.hk/
+——————————————————————————————
+HKUST ENGINEERING | HKUST School of Engineering
+https://seng.hkust.edu.hk/
+Fri, 24 Mar 2023 11:04:32 GMT, 134907
+research 44;
+engin 43;
+hkust 36;
+learn 34;
+prof 27;
+covid19 26;
+develop 26;
+team 17;
+ha 16;
+led 15;
+https://hkust.edu.hk/news
+https://hkust.edu.hk/academics/list
+https://hkust.edu.hk/lifehkust
+http://library.ust.hk
+https://hkust.edu.hk/map-directions
+https://hkustcareers.ust.hk
+https://facultyprofiles.ust.hk
+https://hkust.edu.hk/about-hkust
+https://www.ust.hk
+https://ace.hkust.edu.hk/en
+——————————————————————————————
+Study at a World-class University in Hong Kong |HKUST
+https://hkust.edu.hk/
+Mon, 27 Mar 2023 14:54:47 GMT, 23699
+univers 105;
+hong 91;
+kong 80;
+hkust 70;
+student 36;
+research 32;
+school 30;
+scienc 30;
+educ 25;
+program 22;
+https://hkust-gz.edu.cn/
+https://shaw-auditorium.hkust.edu.hk/
+https://calendar.ust.hk
+https://giving.hkust.edu.hk/en/index.php
+https://alum.hkust.edu.hk/home
+https://hkustcareers.ust.hk/
+https://hkust.edu.hk/stu_intranet/
+https://my-ai.ust.hk
+https://hkust.edu.hk/
+https://hkust.edu.hk/zh-hant
+——————————————————————————————
+ENGINEERING NEWSLETTER - INFOCUS  - Mapping the Way Ahead in 3D - Spring 2015 No.26
+https://epublish.ust.hk/cgi-bin/eng/story.php?id=96&catid=97&keycode=88b7aae0ae45ddb0e6e000ee2682721a&token=17b43a00aeb0f8f8f08df16ae664909f
+Mon, 27 Mar 2023 14:54:43 GMT, 70685
+comput 18;
+3d 13;
+prof 13;
+quan 13;
+hi 12;
+research 11;
+map 10;
+scienc 10;
+hkust 9;
+student 9;
+http://www.seng.ust.hk/web/eng/enewsletter_sub.php
+http://www.addthis.com/bookmark.php?v=250&pub=xa-4a518e9f1fba9eba
+http://www.ust.hk/privacy-policy/
+——————————————————————————————
+No Title Given
+https://www.techinasia.com/weseer-smarter-censorship-china
+Mon, 27 Mar 2023 14:54:47 GMT, 0
+——————————————————————————————
+Prof. Pedro SANDER Expands on His Passion for Computer Graphics | HKUST School of Engineering
+https://seng.hkust.edu.hk/news/20200707/prof-pedro-sander-expands-his-passion-computer-graphics
+Fri, 24 Mar 2023 13:50:21 GMT, 80902
+research 23;
+student 20;
+engin 19;
+hkust 17;
+prof 16;
+sander 16;
+comput 15;
+kong 14;
+faculti 13;
+video 13;
+https://hkust.edu.hk/news
+https://hkust.edu.hk/academics/list
+https://hkust.edu.hk/lifehkust
+http://library.ust.hk
+https://hkust.edu.hk/map-directions
+https://hkustcareers.ust.hk
+https://facultyprofiles.ust.hk
+https://hkust.edu.hk/about-hkust
+https://www.ust.hk
+https://ace.hkust.edu.hk/en
+——————————————————————————————
+Prof. CHEN Kai Designs Next-Generation AI Computing Hub and Sets New Paradigm | HKUST School of Engineering
+https://seng.hkust.edu.hk/news/20201117/prof-chen-kai-designs-next-generation-ai-computing-hub-and-sets-new-paradigm
+Fri, 24 Mar 2023 13:50:18 GMT, 82326
+research 31;
+comput 26;
+hi 22;
+data 21;
+smart 19;
+hong 17;
+engin 16;
+prof 14;
+citi 14;
+wa 14;
+https://hkust.edu.hk/news
+https://hkust.edu.hk/academics/list
+https://hkust.edu.hk/lifehkust
+http://library.ust.hk
+https://hkust.edu.hk/map-directions
+https://hkustcareers.ust.hk
+https://facultyprofiles.ust.hk
+https://hkust.edu.hk/about-hkust
+https://www.ust.hk
+https://ace.hkust.edu.hk/en
+——————————————————————————————
+A new remedy for an old medicine | Offbeat HK | China Daily
+https://www.chinadailyhk.com/articles/14/65/28/1541125674562.html?newsId=52460
+Mon, 27 Mar 2023 14:54:48 GMT, 109004
+medicin 27;
+chines 24;
+hong 23;
+kong 22;
+tcm 20;
+china 19;
+asia 15;
+patient 15;
+data 10;
+symptom 10;
+http://www.chinadaily.com.cn/
+https://global.chinadaily.com.cn/
+https://www.chinadailyhk.com/index.html
+https://www.chinadailyhk.com/article/WebsiteAsia/Asia.html
+https://cdroundtable.com/web
+https://www.chinadailyhk.com/index.html
+https://www.chinadailyhk.com/article/hong_kong/index.html
+https://www.chinadailyhk.com/article/nation/index.html
+https://www.chinadailyhk.com/article/asia/index.html
+https://www.chinadailyhk.com/article/world/index.html
+——————————————————————————————
+HKUST’s New Privacy-Preserving App Maps Hotspots with COVID-19 Cases and Shows Proximity Risk | HKUST School of Engineering
+https://seng.hkust.edu.hk/news/20220811/hkusts-new-privacy-preserving-app-maps-hotspots-covid-19-cases-and-shows-proximity-risk
+Fri, 24 Mar 2023 13:50:19 GMT, 79389
+app 16;
+engin 16;
+incid 14;
+risk 13;
+news 13;
+research 13;
+map 10;
+faculti 10;
+user 10;
+proxim 9;
+https://hkust.edu.hk/news
+https://hkust.edu.hk/academics/list
+https://hkust.edu.hk/lifehkust
+http://library.ust.hk
+https://hkust.edu.hk/map-directions
+https://hkustcareers.ust.hk
+https://facultyprofiles.ust.hk
+https://hkust.edu.hk/about-hkust
+https://www.ust.hk
+https://ace.hkust.edu.hk/en
+——————————————————————————————
+Career Development Dinner for HKUST Engineering Research Postgraduate Students | University Event Calendar - The Hong Kong University of Science and Technology
+https://calendar.hkust.edu.hk/events/career-development-dinner-hkust-engineering-research-postgraduate-students
+Mon, 27 Mar 2023 14:41:44 GMT, 11779
+research 18;
+hkust 17;
+engin 15;
+event 13;
+technolog 11;
+student 10;
+univers 9;
+kong 9;
+hall 9;
+scienc 8;
+https://www.ust.hk/news
+https://www.ust.hk/academics/list
+https://www.ust.hk/lifehkust
+http://library.ust.hk/
+https://www.ust.hk/map-directions
+https://hkustcareers.ust.hk
+https://facultyprofiles.ust.hk/
+https://www.ust.hk/about
+https://engage.ust.hk
+https://www.ust.hk
+——————————————————————————————
+HKUST - 30th Congregation (2022)
+https://livevideo.hkust.edu.hk/home/index_s06.html
+Wed, 16 Nov 2022 08:51:23 GMT, 1322
+2022 2;
+hkust 1;
+30th 1;
+congreg 1;
+session 1;
+6 1;
+01 1;
+decemb 1;
+230pm 1;
+hkt 1;
+——————————————————————————————
+Distinguished Speaker Seminar  - A Survey of Cloud Database Systems | University Event Calendar - The Hong Kong University of Science and Technology
+https://calendar.hkust.edu.hk/events/distinguished-speaker-seminar-survey-cloud-database-systems
+Mon, 27 Mar 2023 14:41:47 GMT, 13371
+research 19;
+univers 18;
+hkust 14;
+event 13;
+technolog 12;
+system 11;
+scienc 9;
+engin 9;
+hall 9;
+distinguish 8;
+https://www.ust.hk/news
+https://www.ust.hk/academics/list
+https://www.ust.hk/lifehkust
+http://library.ust.hk/
+https://www.ust.hk/map-directions
+https://hkustcareers.ust.hk
+https://facultyprofiles.ust.hk/
+https://www.ust.hk/about
+https://engage.ust.hk
+https://www.ust.hk
+——————————————————————————————
+HKUST and China Unicom Establish Joint Laboratory to Empower Research and Development of Smart Society | The Hong Kong University of Science and Technology
+https://hkust.edu.hk/news/internationalization-and-partnership/hkust-and-china-unicom-establish-joint-laboratory-empower
+Mon, 27 Mar 2023 14:54:50 GMT, 16577
+hkust 42;
+china 31;
+research 28;
+unicom 25;
+technolog 23;
+develop 18;
+smart 18;
+school 18;
+scienc 17;
+hong 16;
+https://hkust-gz.edu.cn/
+https://shaw-auditorium.hkust.edu.hk/
+https://calendar.ust.hk
+https://giving.hkust.edu.hk/en/index.php
+https://alum.hkust.edu.hk/home
+https://hkustcareers.ust.hk/
+https://hkust.edu.hk/stu_intranet/
+https://my-ai.ust.hk
+https://hkust.edu.hk/
+https://science.ust.hk/
+——————————————————————————————
+University Data Privacy Policy Statement | Personal Data Privacy - The Hong Kong University of Science and Technology
+https://dataprivacy.hkust.edu.hk/university-data-privacy-policy-statement/
+Mon, 27 Mar 2023 14:54:50 GMT, 47288
+data 76;
+person 58;
+univers 47;
+privaci 27;
+collect 24;
+purpos 20;
+record 19;
+provid 15;
+university’ 13;
+inform 12;
+https://www.ust.hk/news
+https://www.ust.hk/academics/list
+https://www.ust.hk/lifehkust
+http://library.ust.hk/
+https://www.ust.hk/map-directions
+https://hkustcareers.ust.hk
+https://facultyprofiles.ust.hk/
+https://www.ust.hk/about
+https://www.ab.ust.hk/vpabo/
+https://www.ust.hk
+——————————————————————————————
+The Hong Kong University of Science and Technology - HKUST | Hong Kong Hong Kong
+https://www.facebook.com/hkust/
+Mon, 27 Mar 2023 14:54:51 GMT, 314778
+hong 3;
+kong 3;
+univers 1;
+scienc 1;
+technolog 1;
+hkust 1;
+——————————————————————————————
+No Title Given
+https://www.linkedin.com/school/hkust/
+Mon, 27 Mar 2023 14:54:51 GMT, 1530
+——————————————————————————————
+The Hong Kong University of Science and Technology (@hkust) • Instagram photos and videos
+https://www.instagram.com/hkust/
+Mon, 27 Mar 2023 14:54:52 GMT, 313184
+hong 1;
+kong 1;
+univers 1;
+scienc 1;
+technolog 1;
+hkust 1;
+• 1;
+instagram 1;
+photo 1;
+video 1;
+——————————————————————————————
+CSE HKUST - YouTube
+https://www.youtube.com/channel/UC1Gky4HCpEOK5EmoUj6zhGg
+Mon, 27 Mar 2023 14:54:52 GMT, 389154
+簡介新聞中心版權聯絡我們創作者刊登廣告開發人員條款私隱政策及安全youtub 1;
+的運作方式測試新功能© 1;
+2023 1;
+googl 1;
+llccse 1;
+hkust 1;
+youtub 1;
+https://www.youtube.com/about/
+https://www.youtube.com/about/press/
+https://www.youtube.com/about/copyright/
+https://www.youtube.com/creators/
+https://www.youtube.com/ads/
+https://developers.google.com/youtube
+https://www.youtube.com/about/policies/
+https://www.youtube.com/howyoutubeworks?utm_campaign=ytgen&utm_source=ythp&utm_medium=LeftNav&utm_content=txt&u=https%3A%2F%2Fwww.youtube.com%2Fhowyoutubeworks%3Futm_source%3Dythp%26utm_medium%3DLeftNav%26utm_campaign%3Dytgen
+——————————————————————————————
+Home | The Hong Kong University of Science and Technology (Guangzhou)
+https://hkust-gz.edu.cn/
+Mon, 27 Mar 2023 14:55:01 GMT, 58812
+univers 12;
+hkust 10;
+hkustgz 10;
+mphil 10;
+admiss 10;
+research 10;
+program 8;
+hong 7;
+kong 7;
+academ 7;
+https://www.ust.hk/news
+https://www.ust.hk/academics/list
+https://www.ust.hk/lifehkust
+http://library.ust.hk/
+https://www.ust.hk/map-directions
+https://hkustcareers.ust.hk
+https://facultyprofiles.ust.hk/
+https://www.ust.hk/about
+https://myportal.hkust-gz.edu.cn
+https://library.hkust-gz.edu.cn
+——————————————————————————————
+Home | HKUST Shaw Auditorium
+https://shaw-auditorium.hkust.edu.hk/
+Mon, 27 Mar 2023 13:49:35 GMT, 12614
+imag 8;
+event 7;
+hkust 6;
+news 5;
+plan 4;
+technolog 4;
+univers 3;
+search 3;
+upcom 3;
+text 3;
+https://www.ust.hk/news
+https://www.ust.hk/academics/list
+https://www.ust.hk/lifehkust
+https://library.ust.hk/
+https://www.ust.hk/map-directions
+https://hkustcareers.ust.hk
+https://facultyprofiles.ust.hk
+https://www.ust.hk/about
+https://calendar.hkust.edu.hk/events/shaw-auditorium-call-proposals
+https://hkust.edu.hk
+——————————————————————————————
+Events | University Event Calendar - The Hong Kong University of Science and Technology
+https://calendar.ust.hk
+Mon, 27 Mar 2023 14:40:18 GMT, 16595
+2023 63;
+hkust 37;
+march 36;
+organ 31;
+lectur 24;
+seminar 22;
+event 19;
+talk 19;
+kong 17;
+hong 16;
+https://www.ust.hk/news
+https://www.ust.hk/academics/list
+https://www.ust.hk/lifehkust
+http://library.ust.hk/
+https://www.ust.hk/map-directions
+https://hkustcareers.ust.hk
+https://facultyprofiles.ust.hk/
+https://www.ust.hk/about
+https://engage.ust.hk
+https://calendar.hkust.edu.hk/
+——————————————————————————————
+Giving to HKUST
+https://giving.hkust.edu.hk/en/index.php
+Mon, 27 Mar 2023 14:55:17 GMT, 41658
+hkust 10;
+news 5;
+stori 4;
+donat 4;
+univers 3;
+staff 3;
+impact 3;
+project 3;
+librari 2;
+dao 2;
+https://hkust.edu.hk/news
+https://hkust.edu.hk/academics/list
+https://hkust.edu.hk/lifehkust
+http://library.ust.hk
+https://hkust.edu.hk/visit
+https://hkustcareers.ust.hk
+https://facultyprofiles.ust.hk
+https://hkust.edu.hk/about
+https://dao.hkust.edu.hk/
+http://dao.hkust.edu.hk/info_for_staff.php
+——————————————————————————————
