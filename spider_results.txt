@@ -1,6 +1,6 @@
 Department of Computer Science and Engineering - HKUST
 https://cse.hkust.edu.hk/
-Thu, 30 Mar 2023 16:59:35 GMT, 48268 bytes
+Thu, 30 Mar 2023 17:29:07 GMT, 48268 bytes
 hkust 15; research 15; learn 15; postgradu 10; 2023 10; student 9; comput 8; alumni 8; 2022 8; news 7
 https://hkust.edu.hk/news
 https://hkust.edu.hk/academics/list
@@ -15,7 +15,7 @@ https://hkust.edu.hk/
 ——————————————————————————————
 News | The Hong Kong University of Science and Technology
 https://hkust.edu.hk/news
-Thu, 30 Mar 2023 16:59:39 GMT, 15682 bytes
+Thu, 30 Mar 2023 17:29:11 GMT, 15679 bytes
 hkust 31; school 18; 2023 18; scienc 15; student 15; research 15; 03 14; news 13; univers 11; technolog 11
 https://hkust-gz.edu.cn/
 https://shaw-auditorium.hkust.edu.hk/
@@ -30,7 +30,7 @@ https://science.ust.hk/
 ——————————————————————————————
 Academic Departments | The Hong Kong University of Science and Technology
 https://hkust.edu.hk/academics/list
-Thu, 30 Mar 2023 16:59:43 GMT, 16553 bytes
+Thu, 30 Mar 2023 17:29:15 GMT, 16553 bytes
 center 102; hkust 80; research 70; institut 45; depart 40; scienc 35; engin 33; technolog 31; laboratori 31; facil 30
 https://hkust-gz.edu.cn/
 https://shaw-auditorium.hkust.edu.hk/
@@ -45,7 +45,7 @@ https://science.ust.hk/
 ——————————————————————————————
 Best Study Abroad Programs|Vibrant Study Experience in Hong Kong||HKUST
 https://hkust.edu.hk/lifehkust
-Thu, 30 Mar 2023 16:59:46 GMT, 17895 bytes
+Thu, 30 Mar 2023 17:29:18 GMT, 17894 bytes
 student 76; hong 69; studi 68; kong 66; program 51; hkust 47; univers 40; abroad 26; intern 26; school 25
 https://hkust-gz.edu.cn/
 https://shaw-auditorium.hkust.edu.hk/
@@ -60,7 +60,7 @@ https://science.ust.hk/
 ——————————————————————————————
 HKUST Library
 https://library.hkust.edu.hk/
-Thu, 30 Mar 2023 16:59:50 GMT, 14385 bytes
+Thu, 30 Mar 2023 17:29:21 GMT, 14385 bytes
 librari 29; hkust 20; search 13; guid 11; research 10; collect 9; univers 7; resourc 7; databas 7; servic 7
 https://hkust.edu.hk/news
 https://hkust.edu.hk/academics/list
@@ -75,7 +75,7 @@ https://hkust.edu.hk/news
 ——————————————————————————————
 Visit | The Hong Kong University of Science and Technology
 https://hkust.edu.hk/visit
-Thu, 30 Mar 2023 16:59:53 GMT, 14702 bytes
+Thu, 30 Mar 2023 17:29:25 GMT, 14711 bytes
 hkust 34; school 18; mtr 14; student 13; station 13; univers 11; scienc 11; program 10; institut 10; research 10
 https://hkust-gz.edu.cn/
 https://shaw-auditorium.hkust.edu.hk/
@@ -90,7 +90,7 @@ https://science.ust.hk/
 ——————————————————————————————
 Home | CAREERS AT HKUST
 https://hkustcareers.hkust.edu.hk/
-Thu, 30 Mar 2023 16:59:55 GMT, 41816 bytes
+Thu, 30 Mar 2023 17:29:28 GMT, 41816 bytes
 hkust 30; hong 16; kong 16; univers 13; campu 12; research 8; water 6; bay 6; guangzhou 6; open 6
 https://www.ust.hk/news
 https://www.ust.hk/academics/list
@@ -105,7 +105,7 @@ https://www.ust.hk
 ——————————————————————————————
 Faculty Profiles | The Hong Kong University of Science and Technology
 https://facultyprofiles.hkust.edu.hk/
-Thu, 30 Mar 2023 16:59:57 GMT, 3392 bytes
+Thu, 30 Mar 2023 17:29:30 GMT, 3392 bytes
 hkust 5; univers 3; browser 3; offic 2; institut 2; data 2; research 2; oidr 2; ust 2; hk 2
 https://www.ust.hk/news
 https://www.ust.hk/academics/list
@@ -120,7 +120,7 @@ https://facultyprofiles.hkust-gz.edu.cn/
 ——————————————————————————————
 QS Top 10 Universities in China by subject|HKUST
 https://hkust.edu.hk/about
-Thu, 30 Mar 2023 17:00:00 GMT, 23169 bytes
+Thu, 30 Mar 2023 17:29:33 GMT, 23169 bytes
 univers 124; hkust 93; read 65; rank 55; world 43; hong 42; kong 41; research 32; scienc 26; china 23
 https://hkust-gz.edu.cn/
 https://shaw-auditorium.hkust.edu.hk/
@@ -150,7 +150,7 @@ https://ace.hkust.edu.hk/en
 ——————————————————————————————
 Study at a World-class University in Hong Kong |HKUST
 https://hkust.edu.hk/
-Thu, 30 Mar 2023 17:00:08 GMT, 23569 bytes
+Thu, 30 Mar 2023 17:29:42 GMT, 23574 bytes
 univers 111; hong 96; kong 91; hkust 83; student 37; research 35; scienc 32; school 31; world 29; educ 26
 https://hkust-gz.edu.cn/
 https://shaw-auditorium.hkust.edu.hk/
@@ -163,54 +163,18 @@ https://my-ai.ust.hk
 https://hkust.edu.hk/
 https://hkust.edu.hk/zh-hant
 ——————————————————————————————
-No Title Given
-https://www.techinasia.com/weseer-smarter-censorship-china
-Thu, 30 Mar 2023 17:00:12 GMT, 0 bytes
-
-
-——————————————————————————————
-Prof. CHEN Kai Designs Next-Generation AI Computing Hub and Sets New Paradigm | HKUST School of Engineering
-https://seng.hkust.edu.hk/news/20201117/prof-chen-kai-designs-next-generation-ai-computing-hub-and-sets-new-paradigm
-Tue, 28 Mar 2023 08:45:15 GMT, 82326 bytes
-research 31; comput 26; data 22; smart 19; hong 17; kong 17; engin 16; citi 16; prof 14; chen 14
-https://hkust.edu.hk/news
-https://hkust.edu.hk/academics/list
-https://hkust.edu.hk/lifehkust
-http://library.ust.hk
-https://hkust.edu.hk/map-directions
-https://hkustcareers.ust.hk
-https://facultyprofiles.ust.hk
-https://hkust.edu.hk/about-hkust
-https://www.ust.hk
-https://ace.hkust.edu.hk/en
-——————————————————————————————
-A new remedy for an old medicine | Offbeat HK | China Daily
-https://www.chinadailyhk.com/articles/14/65/28/1541125674562.html?newsId=52460
-Thu, 30 Mar 2023 17:00:19 GMT, 119917 bytes
-medicin 28; chines 25; tcm 24; hong 21; patient 21; kong 20; china 19; asia 15; hk 11; daili 11
-http://www.chinadaily.com.cn/
-https://global.chinadaily.com.cn/
-https://www.chinadailyhk.com/index.html
-https://www.chinadailyhk.com/article/WebsiteAsia/Asia.html
-https://cdroundtable.com/web
-https://www.chinadailyhk.com/index.html
-https://www.chinadailyhk.com/article/hong_kong/index.html
-https://www.chinadailyhk.com/article/nation/index.html
-https://www.chinadailyhk.com/article/asia/index.html
-https://www.chinadailyhk.com/article/world/index.html
-——————————————————————————————
 ENGINEERING NEWSLETTER - INFOCUS  - Mapping the Way Ahead in 3D - Spring 2015 No.26
 https://epublish.ust.hk/cgi-bin/eng/story.php?id=96&catid=97&keycode=88b7aae0ae45ddb0e6e000ee2682721a&token=17b43a00aeb0f8f8f08df16ae664909f
-Thu, 30 Mar 2023 17:00:18 GMT, 70685 bytes
+Thu, 30 Mar 2023 17:29:41 GMT, 70685 bytes
 comput 18; 3d 13; prof 13; quan 13; research 11; map 10; student 10; scienc 10; hkust 9; engin 8
 http://www.seng.ust.hk/web/eng/enewsletter_sub.php
 http://www.addthis.com/bookmark.php?v=250&pub=xa-4a518e9f1fba9eba
 http://www.ust.hk/privacy-policy/
 ——————————————————————————————
-Prof. Pedro SANDER Expands on His Passion for Computer Graphics | HKUST School of Engineering
-https://seng.hkust.edu.hk/news/20200707/prof-pedro-sander-expands-his-passion-computer-graphics
-Tue, 28 Mar 2023 08:21:25 GMT, 80901 bytes
-research 23; student 22; hkust 21; engin 19; prof 16; sander 16; comput 15; hong 14; kong 14; faculti 13
+Prof. CHEN Kai Designs Next-Generation AI Computing Hub and Sets New Paradigm | HKUST School of Engineering
+https://seng.hkust.edu.hk/news/20201117/prof-chen-kai-designs-next-generation-ai-computing-hub-and-sets-new-paradigm
+Tue, 28 Mar 2023 08:45:15 GMT, 82326 bytes
+research 31; comput 26; data 22; smart 19; hong 17; kong 17; engin 16; citi 16; prof 14; chen 14
 https://hkust.edu.hk/news
 https://hkust.edu.hk/academics/list
 https://hkust.edu.hk/lifehkust
@@ -237,9 +201,45 @@ https://hkust.edu.hk/about-hkust
 https://www.ust.hk
 https://ace.hkust.edu.hk/en
 ——————————————————————————————
+No Title Given
+https://www.techinasia.com/weseer-smarter-censorship-china
+Thu, 30 Mar 2023 17:29:56 GMT, 0 bytes
+
+
+——————————————————————————————
+A new remedy for an old medicine | Offbeat HK | China Daily
+https://www.chinadailyhk.com/articles/14/65/28/1541125674562.html?newsId=52460
+Thu, 30 Mar 2023 17:29:59 GMT, 119897 bytes
+medicin 28; chines 25; tcm 24; hong 21; patient 21; kong 20; china 19; asia 14; hk 12; daili 11
+http://www.chinadaily.com.cn/
+https://global.chinadaily.com.cn/
+https://www.chinadailyhk.com/index.html
+https://www.chinadailyhk.com/article/WebsiteAsia/Asia.html
+https://cdroundtable.com/web
+https://www.chinadailyhk.com/index.html
+https://www.chinadailyhk.com/article/hong_kong/index.html
+https://www.chinadailyhk.com/article/nation/index.html
+https://www.chinadailyhk.com/article/asia/index.html
+https://www.chinadailyhk.com/article/world/index.html
+——————————————————————————————
+Prof. Pedro SANDER Expands on His Passion for Computer Graphics | HKUST School of Engineering
+https://seng.hkust.edu.hk/news/20200707/prof-pedro-sander-expands-his-passion-computer-graphics
+Tue, 28 Mar 2023 08:21:25 GMT, 80901 bytes
+research 23; student 22; hkust 21; engin 19; prof 16; sander 16; comput 15; hong 14; kong 14; faculti 13
+https://hkust.edu.hk/news
+https://hkust.edu.hk/academics/list
+https://hkust.edu.hk/lifehkust
+http://library.ust.hk
+https://hkust.edu.hk/map-directions
+https://hkustcareers.ust.hk
+https://facultyprofiles.ust.hk
+https://hkust.edu.hk/about-hkust
+https://www.ust.hk
+https://ace.hkust.edu.hk/en
+——————————————————————————————
 Career Development Dinner for HKUST Engineering Research Postgraduate Students | University Event Calendar - The Hong Kong University of Science and Technology
 https://calendar.hkust.edu.hk/events/career-development-dinner-hkust-engineering-research-postgraduate-students
-Thu, 30 Mar 2023 16:51:17 GMT, 11785 bytes
+Thu, 30 Mar 2023 17:30:05 GMT, 11777 bytes
 hkust 43; gz 28; research 19; engin 15; event 13; student 11; technolog 11; offic 11; univers 9; kong 9
 https://www.ust.hk/news
 https://www.ust.hk/academics/list
@@ -260,7 +260,7 @@ Wed, 16 Nov 2022 08:51:23 GMT, 1322 bytes
 ——————————————————————————————
 Distinguished Speaker Seminar  - A Survey of Cloud Database Systems | University Event Calendar - The Hong Kong University of Science and Technology
 https://calendar.hkust.edu.hk/events/distinguished-speaker-seminar-survey-cloud-database-systems
-Thu, 30 Mar 2023 16:51:18 GMT, 13377 bytes
+Thu, 30 Mar 2023 17:30:10 GMT, 13384 bytes
 hkust 40; gz 28; research 20; univers 18; event 13; technolog 12; system 11; offic 11; scienc 9; ibm 9
 https://www.ust.hk/news
 https://www.ust.hk/academics/list
@@ -275,7 +275,7 @@ https://www.ust.hk
 ——————————————————————————————
 HKUST and China Unicom Establish Joint Laboratory to Empower Research and Development of Smart Society | The Hong Kong University of Science and Technology
 https://hkust.edu.hk/news/internationalization-and-partnership/hkust-and-china-unicom-establish-joint-laboratory-empower
-Thu, 30 Mar 2023 17:00:40 GMT, 16608 bytes
+Thu, 30 Mar 2023 17:30:13 GMT, 16602 bytes
 hkust 50; china 31; research 28; unicom 25; technolog 24; develop 19; smart 18; school 18; hong 17; kong 17
 https://hkust-gz.edu.cn/
 https://shaw-auditorium.hkust.edu.hk/
@@ -290,7 +290,7 @@ https://science.ust.hk/
 ——————————————————————————————
 University Data Privacy Policy Statement | Personal Data Privacy - The Hong Kong University of Science and Technology
 https://dataprivacy.hkust.edu.hk/university-data-privacy-policy-statement/
-Thu, 30 Mar 2023 17:00:43 GMT, 47288 bytes
+Thu, 30 Mar 2023 17:30:16 GMT, 47288 bytes
 data 76; univers 61; person 59; privaci 27; collect 24; purpos 20; record 19; provid 15; inform 12; includ 12
 https://www.ust.hk/news
 https://www.ust.hk/academics/list
@@ -305,25 +305,25 @@ https://www.ust.hk
 ——————————————————————————————
 The Hong Kong University of Science and Technology - HKUST | Hong Kong Hong Kong
 https://www.facebook.com/hkust/
-Thu, 30 Mar 2023 17:00:45 GMT, 356112 bytes
+Thu, 30 Mar 2023 17:30:19 GMT, 355779 bytes
 hong 3; kong 3; univers 1; scienc 1; technolog 1; hkust 1
 
 ——————————————————————————————
 No Title Given
 https://www.linkedin.com/school/hkust/
-Thu, 30 Mar 2023 17:00:48 GMT, 1530 bytes
+Thu, 30 Mar 2023 17:30:22 GMT, 1530 bytes
 
 
 ——————————————————————————————
 Login • Instagram
 https://www.instagram.com/hkust/
-Thu, 30 Mar 2023 17:00:50 GMT, 248234 bytes
+Thu, 30 Mar 2023 17:30:25 GMT, 248215 bytes
 login 1; instagram 1
 
 ——————————————————————————————
 CSE HKUST - YouTube
 https://www.youtube.com/channel/UC1Gky4HCpEOK5EmoUj6zhGg
-Thu, 30 Mar 2023 17:00:53 GMT, 397238 bytes
+Thu, 30 Mar 2023 17:30:27 GMT, 398380 bytes
 youtub 2; aboutpresscopyrightcontact 1; uscreatorsadvertisedeveloperstermsprivacypolici 1; safetyhow 1; workstest 1; featuresnfl 1; sunday 1; ticket 1; 2023 1; googl 1
 https://www.youtube.com/about/
 https://www.youtube.com/about/press/
@@ -337,7 +337,7 @@ https://tv.youtube.com/learn/nflsundayticket
 ——————————————————————————————
 Home | The Hong Kong University of Science and Technology (Guangzhou)
 https://hkust-gz.edu.cn/
-Thu, 30 Mar 2023 17:00:56 GMT, 59201 bytes
+Thu, 30 Mar 2023 17:30:30 GMT, 59201 bytes
 hkust 20; 广州 11; univers 10; mphil 10; admiss 10; research 10; 2023 10; 03 10; gz 9; academ 7
 https://www.ust.hk/news
 https://www.ust.hk/academics/list
@@ -367,7 +367,7 @@ https://hkust.edu.hk
 ——————————————————————————————
 Events | University Event Calendar - The Hong Kong University of Science and Technology
 https://calendar.ust.hk
-Thu, 30 Mar 2023 16:53:28 GMT, 15831 bytes
+Thu, 30 Mar 2023 17:28:31 GMT, 15823 bytes
 hkust 71; 2023 63; gz 36; march 33; organ 31; seminar 25; lectur 24; offic 22; 31 21; event 20
 https://www.ust.hk/news
 https://www.ust.hk/academics/list
@@ -382,7 +382,7 @@ https://calendar.hkust.edu.hk/
 ——————————————————————————————
 Giving to HKUST
 https://giving.hkust.edu.hk/en/index.php
-Thu, 30 Mar 2023 17:01:06 GMT, 41658 bytes
+Thu, 30 Mar 2023 17:30:40 GMT, 41658 bytes
 hkust 12; news 5; stori 4; scienc 4; donat 4; give 3; univers 3; staff 3; impact 3; project 3
 https://hkust.edu.hk/news
 https://hkust.edu.hk/academics/list
