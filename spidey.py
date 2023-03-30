@@ -1,4 +1,4 @@
-import sys, os, requests, string
+import sys, os, requests, string, sqlite3
 from tinydb import TinyDB, Query
 from bs4 import BeautifulSoup
 from nltk.stem import PorterStemmer
@@ -38,7 +38,100 @@ except OSError:
 db = TinyDB('spideydb.json')
 pages_table = db.table('pages')
 
-# function to update the inverted index
+# adding an sqlite3 database
+conn = sqlite3.connect('spidey.sqlite')
+cur = conn.cursor()
+
+# creating the page table
+cur.execute('''CREATE TABLE Page
+             (page_id INTEGER PRIMARY KEY,
+              url TEXT,
+              title TEXT,
+              content TEXT,
+              soup TEXT,
+              last_modified TEXT,
+              size INTEGER,
+              parent_url TEXT
+              )''')
+
+# creating a link table for child links
+cur.execute('''CREATE TABLE Link
+                (link_id INTEGER PRIMARY KEY,
+                page_id INTEGER,
+                child_url TEXT,
+                Foreign Key(page_id) REFERENCES Page(page_id)
+                )''')
+
+# creating a term table for keywords
+cur.execute('''CREATE TABLE Term
+                (term_id INTEGER PRIMARY KEY,
+                term TEXT''')
+
+# creating a term frequency table for keywords
+cur.execute('''CREATE TABLE TermFrequency
+                (page_id INTEGER,
+                term_id INTEGER,
+                frequency INTEGER,
+                Foreign Key(page_id) REFERENCES Page(page_id),
+                Foreign Key(term_id) REFERENCES Term(term_id)
+                )''')
+
+# creating a term position table for titles
+cur.execute('''CREATE TABLE TitleTermPosition
+                (page_id INTEGER,
+                term_id INTEGER,
+                position_list TEXT,
+                Foreign Key(page_id) REFERENCES Page(page_id),
+                Foreign Key(term_id) REFERENCES Term(term_id)
+                )''')
+
+# creating a term position table for content
+cur.execute('''CREATE TABLE ContentTermPosition
+                (page_id INTEGER,
+                term_id INTEGER,
+                position_list TEXT,
+                Foreign Key(page_id) REFERENCES Page(page_id),
+                Foreign Key(term_id) REFERENCES Term(term_id)
+                )''')
+
+# creating a forward index table for the titles
+cur.execute('''CREATE TABLE TitleForwardIndex
+                (page_id INTEGER,
+                term_id INTEGER,
+                Foreign Key(page_id) REFERENCES Page(page_id),
+                Foreign Key(term_id) REFERENCES Term(term_id)
+                )''')
+
+# creating a forward index table for the content
+cur.execute('''CREATE TABLE ContentForwardIndex
+                (page_id INTEGER,
+                term_id INTEGER,
+                Foreign Key(page_id) REFERENCES Page(page_id),
+                Foreign Key(term_id) REFERENCES Term(term_id)
+                )''')
+
+# creating an inverted index table for the titles
+cur.execute('''CREATE TABLE TitleInvertedIndex
+                (term_id INTEGER,
+                page_id INTEGER,
+                Foreign Key(page_id) REFERENCES Page(page_id),
+                Foreign Key(term_id) REFERENCES Term(term_id)
+                )''')
+
+# creating an inverted index table for the content
+cur.execute('''CREATE TABLE ContentInvertedIndex
+                (term_id INTEGER,
+                page_id INTEGER,
+                Foreign Key(page_id) REFERENCES Page(page_id),
+                Foreign Key(term_id) REFERENCES Term(term_id)
+                )''')
+
+cur.commit()
+cur.close()
+
+# unsure if we'll need all of these, but they'll be there just in case
+
+# function to update the inverted index dictionary
 # this takes in the list of words from a page
 # updates the inverted index to contain for each word:
 # a list of urls that contain that word
