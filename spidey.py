@@ -4,22 +4,35 @@ from nltk.stem import PorterStemmer
 from collections import deque, Counter
 from urllib.parse import urlparse, urlunparse, urljoin, urlencode, quote, parse_qs
 from spideyTest import outputDatabase
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.chrome.service import Service
 
-urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
-
-# creating a web scraper with beautifulsoup & requests & tinydb to get X pages from the url 
-# and index the data before storing it in a database
+# creating a web scraper with selenium, beautifulsoup, and sqlite to get X pages from the given root url into a database setup for later searching
 
 debug = True
 
-# the visited set
+# initializations
 visited = set()
-
-# inverted index
-invertedIndex = {}
-
-# the BFS queue initialization
 bfsQueue = deque()
+
+# detect what operating system is being used, and set the path to the chromedriver accordingly
+if sys.platform == 'win32':
+    driverPath = './web_Drivers/chromedriver_win32/chromedriver.exe'
+# if using macOS, we need to determine if arm or not
+elif sys.platform == 'darwin':
+    machine = platform.machine()
+    if "arm" in machine.lower():
+        driverPath = './web_Drivers/chromedriver_mac_arm64/chromedriver'
+    driverPath = '.web_Drivers/chromedriver_mac64/chromedriver'
+elif sys.platform == 'linux':
+    driverPath = './web_Drivers/chromedriver_linux64/chromedriver'
+else:
+    raise ValueError("Unsupported OS")
+options = Options()
+options.add_argument('--headless')
+service = Service(driverPath)
+driver = webdriver.Chrome(service=service, options=options)
 
 # stopword list, imported from a .txt file
 stopwords = []
@@ -27,7 +40,7 @@ with open('stopwords.txt', 'r') as f:
     for line in f:
         stopwords.append(line.strip())
 
-# remove the database file if it already exists
+# remove to the database file if it already exists
 try:
     os.remove('spidey.sqlite')
 except OSError:
@@ -108,7 +121,7 @@ cur.execute('''CREATE TABLE ContentIndex
 
 conn.commit()
 
-# function to hash pages for later comparison
+# function to hash pages for later comparison (Reserved for page to page in database comparison in the future, like for page updates)
 def hashPage(soup):
     # Remove unwanted elements
     for element in soup(["script", "style", "meta"]):
@@ -122,7 +135,7 @@ def hashPage(soup):
 
 # function to canonicalize urls
 def canonicalize(url):
-    #Canonicalizes a URL by performing the following operations:
+    # Canonicalizes a URL by performing the following operations:
     # 1. Normalizes the scheme and hostname to lower case.
     # 2. Removes the default port for the scheme (e.g. port 80 for HTTP).
     # 3. Removes any trailing slashes from the path.
@@ -181,9 +194,9 @@ def canonicalize(url):
 # function to try and get the page, skipping if it fails due to verification or timeout, exits the program if we've run out of links early
 def getPage(curUrl, bfsQueue):
     try:
-        # get the page
-        page = requests.get(curUrl, verify=certifi.where(), timeout=5)
-        return page
+        # get the page with selenium, with a 10 second timeout
+        driver.get(curUrl)
+        return
     except Exception as e:
         # if there's nothing in the queue, except the code and end the program
         if len(bfsQueue) == 0:
@@ -214,27 +227,25 @@ def scrape(curUrl, targetVisited, parentUrl, bfsQueue):
         return
     else:
         # get the page
-        page = getPage(curUrl, bfsQueue)
+        getPage(curUrl, bfsQueue)
         # parse page
-        soup = BeautifulSoup(page.content, 'html.parser')
+        soup = BeautifulSoup(driver.page_source, 'html.parser')
         if soup.title is not None and soup.title.string.strip() != "":
             title = soup.title.string
         else:
             title = "No Title Given"
-        rawHTML = page.text
+        rawHTML = driver.page_source
         hash = hashPage(soup)
         
-        # get last modified date from http header, if it doesn't exist use the date field from the html
-        if 'Last-Modified' in page.headers:
-            lastModified = page.headers['Last-Modified']
-        else:
-            lastModified = page.headers['Date']
+        # get last modified date by 
+        lastModified = driver.execute_script("return document.lastModified")
+        if lastModified is None:
+            lastModified = driver.execute_script("return document.date")
+            if lastModified is None:
+                lastModified = "Unkown"
 
-        # get the size as the content length from the http header, if it doesn't exist use the length of the html
-        if 'Content-Length' in page.headers:
-            size = int(page.headers['Content-Length'])
-        else:
-            size = len(page.content)
+        # get the size of the page by getting the length of the raw html
+        size = len(rawHTML)
 
         # get first 100 links (we have some limiters to make sure we don't get too many links)
         links = []
@@ -341,3 +352,4 @@ else: # command line execution for spideyTest.py & TAs
     cur.close()
     conn.close()
     outputDatabase()
+driver.close()
