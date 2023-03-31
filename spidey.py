@@ -1,4 +1,4 @@
-import sys, os, requests, string, sqlite3, urllib3, re, hashlib
+import sys, os, requests, string, sqlite3, urllib3, re, hashlib, certifi
 from bs4 import BeautifulSoup
 from nltk.stem import PorterStemmer
 from collections import deque, Counter
@@ -135,7 +135,7 @@ def canonicalize(url):
     # Normalize scheme and hostname to lower case
     parsed_url = parsed_url._replace(scheme=parsed_url.scheme.lower())
     parsed_url = parsed_url._replace(netloc=parsed_url.netloc.lower())
-    # Remove default ports
+    # Remove default ports (these are the most common ones)
     default_ports = {
         'http': 80,
         'https': 443,
@@ -178,6 +178,27 @@ def canonicalize(url):
     parsed_url = parsed_url._replace(path='/'.join(filter(None, parsed_url.path.split('/'))))
     return urlunparse(parsed_url)
 
+# function to try and get the page, skipping if it fails due to verification or timeout, exits the program if we've run out of links early
+def getPage(curUrl, bfsQueue):
+    try:
+        # get the page
+        page = requests.get(curUrl, verify=certifi.where(), timeout=5)
+        return page
+    except Exception as e:
+        # if there's nothing in the queue, except the code and end the program
+        if len(bfsQueue) == 0:
+            print("No more links to visit, as the last one has excepted. Exiting...")
+            exit()
+        else:
+            # if there is something else in the queue, move on to that
+            nextLink = bfsQueue.popleft()
+            while nextLink is None or nextLink in visited:
+                if len(bfsQueue) == 0:
+                    print("No more links to visit, as the last one has excepted. Exiting...")
+                    exit()
+                nextLink = bfsQueue.popleft()
+            return getPage(nextLink, bfsQueue)
+
 # from each page, we need to get the page title, page url, last modification date, size of page (in characters)
 # and the first 10 links on the page, as well as top 10 keywords along with their frequency
 
@@ -192,7 +213,8 @@ def scrape(curUrl, targetVisited, parentUrl, bfsQueue):
     elif len(visited) >= targetVisited:
         return
     else:
-        page = requests.get(curUrl, verify=False)
+        # get the page
+        page = getPage(curUrl, bfsQueue)
         # parse page
         soup = BeautifulSoup(page.content, 'html.parser')
         if soup.title is not None and soup.title.string.strip() != "":
@@ -295,6 +317,8 @@ def scrape(curUrl, targetVisited, parentUrl, bfsQueue):
         # we will use a set to keep track of the pages we have already visited (faster than checking the database)
 
         bfsQueue.extend(link for link in links if link not in visited)
+
+
 
         # start scraping
         while bfsQueue:
