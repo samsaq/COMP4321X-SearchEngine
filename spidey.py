@@ -1,9 +1,9 @@
-import sys, os, requests, string, sqlite3
+import sys, os, requests, string, sqlite3, urllib3, re, hashlib, certifi
 from bs4 import BeautifulSoup
 from nltk.stem import PorterStemmer
 from collections import deque, Counter
+from urllib.parse import urlparse, urlunparse, urljoin, urlencode, quote, parse_qs
 from spideyTest import outputDatabase
-import urllib3, re, hashlib
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
@@ -108,9 +108,6 @@ cur.execute('''CREATE TABLE ContentIndex
 
 conn.commit()
 
-
-# unsure if we'll need all of these, but they'll be there just in case
-
 # function to hash pages for later comparison
 def hashPage(soup):
     # Remove unwanted elements
@@ -123,18 +120,101 @@ def hashPage(soup):
     # hash the raw html
     return hashlib.sha256(page_content.encode('utf-8')).hexdigest()
 
+# function to canonicalize urls
+def canonicalize(url):
+    #Canonicalizes a URL by performing the following operations:
+    # 1. Normalizes the scheme and hostname to lower case.
+    # 2. Removes the default port for the scheme (e.g. port 80 for HTTP).
+    # 3. Removes any trailing slashes from the path.
+    # 4. Removes any URL fragments.
+    # 5. Removes any query parameters that are known not to affect the content of the page.
+    # 6. Decodes any percent-encoded characters in the URL.
+    # 7. Removes duplicate slashes from the path.
+    # 8. Sorts the query parameters by name.
+    parsed_url = urlparse(url)
+    # Normalize scheme and hostname to lower case
+    parsed_url = parsed_url._replace(scheme=parsed_url.scheme.lower())
+    parsed_url = parsed_url._replace(netloc=parsed_url.netloc.lower())
+    # Remove default ports (these are the most common ones)
+    default_ports = {
+        'http': 80,
+        'https': 443,
+        'ftp': 21,
+        'ftps': 990,
+        'ssh': 22,
+        'telnet': 23,
+        'smtp': 25,
+        'pop3': 110,
+        'imap': 143,
+        'ldap': 389,
+        'ldaps': 636,
+    }
+    if parsed_url.port == default_ports.get(parsed_url.scheme):
+        parsed_url = parsed_url._replace(netloc=parsed_url.hostname)
+        parsed_url = parsed_url._replace(port=None)
+    # Remove trailing slash from path
+    if parsed_url.path.endswith('/') and len(parsed_url.path) > 1:
+        parsed_url = parsed_url._replace(path=parsed_url.path.rstrip('/'))
+    # Remove URL fragments
+    parsed_url = parsed_url._replace(fragment='')
+    # Remove query parameters that do not affect page content (these ones should just be used for tracking)
+    query_params = []
+    for param, value in parse_qs(parsed_url.query, keep_blank_values=True).items():
+        if param.lower() in ['utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content', 'ref']:
+            continue
+        for v in value:
+            query_params.append((param, v))
+    if query_params:
+        sorted_params = sorted(query_params, key=lambda x: x[0])
+        encoded_params = []
+        for param, value in sorted_params:
+            encoded_params.append((quote(param, safe=''), quote(value, safe='')))
+        parsed_url = parsed_url._replace(query=urlencode(encoded_params))
+    else:
+        parsed_url = parsed_url._replace(query='')
+    # Decode percent-encoded characters
+    parsed_url = parsed_url._replace(path=quote(parsed_url.path, safe='/'))
+    # Remove duplicate slashes from path
+    parsed_url = parsed_url._replace(path='/'.join(filter(None, parsed_url.path.split('/'))))
+    return urlunparse(parsed_url)
+
+# function to try and get the page, skipping if it fails due to verification or timeout, exits the program if we've run out of links early
+def getPage(curUrl, bfsQueue):
+    try:
+        # get the page
+        page = requests.get(curUrl, verify=certifi.where(), timeout=5)
+        return page
+    except Exception as e:
+        # if there's nothing in the queue, except the code and end the program
+        if len(bfsQueue) == 0:
+            print("No more links to visit, as the last one has excepted. Exiting...")
+            exit()
+        else:
+            # if there is something else in the queue, move on to that
+            nextLink = bfsQueue.popleft()
+            while nextLink is None or nextLink in visited:
+                if len(bfsQueue) == 0:
+                    print("No more links to visit, as the last one has excepted. Exiting...")
+                    exit()
+                nextLink = bfsQueue.popleft()
+            return getPage(nextLink, bfsQueue)
+
 # from each page, we need to get the page title, page url, last modification date, size of page (in characters)
 # and the first 10 links on the page, as well as top 10 keywords along with their frequency
 
 # the function to recursively scrape the pages
 def scrape(curUrl, targetVisited, parentUrl, bfsQueue):
+
+    curUrl = canonicalize(curUrl)
+
     # base case
     if curUrl in visited:
         return
     elif len(visited) >= targetVisited:
         return
     else:
-        page = requests.get(curUrl, verify=False)
+        # get the page
+        page = getPage(curUrl, bfsQueue)
         # parse page
         soup = BeautifulSoup(page.content, 'html.parser')
         if soup.title is not None and soup.title.string.strip() != "":
@@ -237,6 +317,8 @@ def scrape(curUrl, targetVisited, parentUrl, bfsQueue):
         # we will use a set to keep track of the pages we have already visited (faster than checking the database)
 
         bfsQueue.extend(link for link in links if link not in visited)
+
+
 
         # start scraping
         while bfsQueue:
