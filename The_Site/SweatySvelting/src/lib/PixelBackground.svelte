@@ -1,6 +1,6 @@
 <!-- The component that will setup the colorful pixel-grid background -->
 <script>
-    import { onMount } from "svelte";
+    import { onMount, onDestroy } from "svelte";
     import { Mystore } from "../Mystore.js";
     import anime from "animejs";
 
@@ -19,6 +19,7 @@
         curBackgroundColor = "rgb(20, 20, 20)",
         curIndexNum,
         curIndexMid,
+        interval,
         wrapper;
 
     onMount(() => {
@@ -41,9 +42,12 @@
             });
             curBackgroundColor = colors[count % (colors.length - 1)];
             if (index === curIndexMid) {
-                Mystore.update(currentValue => {
-                    return { ...currentValue, curMidIndexColor: curBackgroundColor };
-                }); 
+                Mystore.update((currentValue) => {
+                    return {
+                        ...currentValue,
+                        curMidIndexColor: curBackgroundColor,
+                    };
+                });
             }
         };
 
@@ -75,25 +79,30 @@
             curIndexMid = Math.floor(curIndexNum / 2);
         };
 
+        function simulateClick(curIndexNum) {
+            // get a random index bounded by curIndexNum
+            const randomIndex = Math.floor(Math.random() * curIndexNum);
+            // simulate a click at the random index
+            const tile = document.getElementsByClassName("tile")[randomIndex];
+            tile.dispatchEvent(new Event("click"));
+        }
+
         createGrid();
 
-        // this function will simulate a click at a random index every 3.5-7.5 seconds, after 3.5-7.5 seconds from page load
-        setTimeout(() => {
-            function simulateClick(curIndexNum) {
-                setInterval(() => {
-                    // get a random index bounded by curIndexNum
-                    const randomIndex = Math.floor(Math.random() * curIndexNum);
-                    // simulate a click at the random index
-                    const tile =
-                        document.getElementsByClassName("tile")[randomIndex];
-                    tile.dispatchEvent(new Event('click'));
-                }, Math.floor(Math.random() * (7500 - 3500) + 3500));
-            }
+        //Call simulateClick every 5 to 7.5 seconds
+        interval = setInterval(() => {
             simulateClick(curIndexNum);
-        }, Math.floor(Math.random() * (7500 - 3500) + 3500));
+        }, Math.floor(Math.random() * 2500) + 5000);
+       
 
         window.onresize = () => createGrid();
     });
+
+    onDestroy(() => {
+        clearInterval(interval);
+    })
+
+
 </script>
 
 <div class="componentBody">
@@ -102,11 +111,18 @@
 
 <style>
     .componentBody {
-        background-color: rgb(20, 20, 20);
-        height: 100vh;
+        background-color: rgb(
+            20,
+            20,
+            20
+        ); /* this is the starting background color of the entire page */
+        position: absolute; /**We don't want to interfere with the positioning of other elements*/
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
         overflow: hidden;
         margin: 0px;
-        z-index: -1;
     }
 
     #tiles {

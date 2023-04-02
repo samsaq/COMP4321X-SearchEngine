@@ -18,15 +18,14 @@
         left: 50%;
         transform: translate(-50%, -50%);
         background: #2f3640;
-        height : 2vh;
-        border-radius: 2vh;
-        padding: .5vh;
-        z-index: 1;
+        height : 6vh;
+        border-radius: 6vh;
+        padding: 0.75vh;
     }
 
     .search-box:hover > .search-txt {
-        width: 12vh;
-        padding: 0 .25vh;
+        width: 33vh;
+        padding: 0 .75vh;
     }
 
     .search-box:hover > .search-btn {
@@ -36,8 +35,8 @@
     .search-btn {
         color: #e84118;
         float: right;
-        width: 2vh;
-        height: 2vh;
+        width: 6vh;
+        height: 6vh;
         border-radius: 50%;
         background: #2f3640; /*put the value from the store here later*/
         display: flex;
@@ -53,9 +52,9 @@
         float: left;
         padding: 0;
         color: white;
-        font-size: 1.2vh;
+        font-size: 2.25vh;
         transition: 0.4s;
-        line-height: 2vh;
+        line-height: 6vh;
         width: 0px;
     }
 
@@ -63,7 +62,7 @@
 
 <div class="search-box">
     <input type="text" class="search-txt" placeholder="What are you looking for?" />
-    <a class="search-btn" href="#"> 
+    <a class="search-btn" href=None> <!--href=None is a placeholder for the search page-->
         <i class="fas fa-search"></i>
     </a>
 </div>
