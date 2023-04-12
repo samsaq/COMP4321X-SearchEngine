@@ -22,8 +22,8 @@ ___
 3. ~Adding URL cannonicalization to the spider, to ensure that the same page is not crawled multiple times~ **DONE**
 4. ~Handle redirects and other such errors with page hash comparison~ **DONE instead with switch to selenium**
 
+**Mission Accomplished** (For now)
+
 The Site
 ___
-1. 
-
-**Mission Accomplished** (For now)
+1. We'll be finishing the initial site first
