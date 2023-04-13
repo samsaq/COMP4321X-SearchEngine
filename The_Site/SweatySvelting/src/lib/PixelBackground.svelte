@@ -2,7 +2,7 @@
 <script lang="ts">
     import { onMount, onDestroy } from "svelte";
     import { Mystore } from "../Mystore.js";
-    import anime from 'animejs/lib/anime'
+    import anime from "animejs/lib/anime";
 
     const colors = [
         "rgb(229, 57, 53)",
@@ -12,6 +12,16 @@
         "rgb(33, 150, 243)",
         "rgb(156, 39, 176)",
     ];
+
+    const darkColors = [
+        "rgb(31, 31, 31)", // Very dark gray
+        "rgb(92, 37, 83)", // Dark magenta
+        "rgb(40, 80, 110)", // Dark blue
+        "rgb(121, 56, 44)", // Dark red
+        "rgb(64, 44, 79)",  // Dark purple
+        "rgb(119, 80, 48)", // Dark orange
+    ];
+
     //variables for the grid
     let columns = 0,
         rows = 0,
@@ -23,12 +33,9 @@
         wrapper: HTMLElement;
 
     onMount(() => {
-        if(document.getElementById("tiles"))
-        {
+        if (document.getElementById("tiles")) {
             wrapper = document.getElementById("tiles")!;
-        }
-        else
-        {
+        } else {
             throw new Error("Could not find wrapper element with id 'tiles'");
         }
         //onclick animation function
@@ -99,20 +106,18 @@
         interval = setInterval(() => {
             simulateClick(curIndexNum);
         }, Math.floor(Math.random() * 2500) + 5000);
-       
 
         window.onresize = () => createGrid();
     });
 
     onDestroy(() => {
         clearInterval(interval);
-    })
-
-
+    });
 </script>
 
 <div class="componentBody">
     <div id="tiles" />
+    <slot />
 </div>
 
 <style>
