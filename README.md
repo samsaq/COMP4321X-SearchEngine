@@ -26,4 +26,5 @@ ___
 
 The Site
 ___
-1. Construct the search & results page to send and show results from API calls to the backend
+1. ~Finish the initial site landing page & choose the color scheme and typography to be used~ **DONE**
+2. Construct the search & results page to send and show results from API calls to the backend
