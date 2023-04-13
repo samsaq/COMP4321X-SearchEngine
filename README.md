@@ -26,4 +26,4 @@ ___
 
 The Site
 ___
-1. We'll be finishing the initial site first
+1. Construct the search & results page to send and show results from API calls to the backend
