@@ -1,7 +1,6 @@
 <!-- The component that will setup the colorful pixel-grid background -->
 <script lang="ts">
     import { onMount, onDestroy } from "svelte";
-    import { Mystore } from "../Mystore.js";
     import anime from "animejs/lib/anime";
 
     const colors = [
@@ -55,12 +54,7 @@
             });
             curBackgroundColor = colors[count % (colors.length - 1)];
             if (index === curIndexMid) {
-                Mystore.update((currentValue: any) => {
-                    return {
-                        ...currentValue,
-                        curMidIndexColor: curBackgroundColor,
-                    };
-                });
+                //store update here, if needed
             }
         };
 
