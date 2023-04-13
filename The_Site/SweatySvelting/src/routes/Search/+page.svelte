@@ -4,10 +4,10 @@
 
 </script>
 
-    <h2>Search Page</h2>
+    
 
 <style>
 
-
+    
 
 </style>
