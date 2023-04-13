@@ -49,7 +49,7 @@ def outputDatabase():
         pageOutput += f'{keyword_str}\n'
 
         # Get the first 10 child links for this page
-        cur.execute('SELECT child_url FROM Link WHERE page_id = ? LIMIT 10', (page[0],))
+        cur.execute('SELECT child_url FROM ChildLink WHERE page_id = ? LIMIT 10', (page[0],))
         links = cur.fetchall()
 
         # Append the child links
@@ -74,8 +74,11 @@ def outputDatabase():
     cur.close()
     conn.close()
 
-def main():
+def main(): # the file is only run directly for testing purposes after phase 1
     # output the database to spider_results.txt, if it exists (if not, print an error message)
+
+    os.chdir('Spidey') # change the working directory to the Spidey folder for debugging in VSC
+
     if os.path.exists('spidey.sqlite'):
         outputDatabase()
     else:

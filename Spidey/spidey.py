@@ -12,6 +12,9 @@ from selenium.webdriver.chrome.service import Service
 
 debug = True
 
+if(debug):
+    os.chdir('Spidey')
+
 # initializations
 visited = set()
 bfsQueue = deque()
@@ -29,8 +32,14 @@ elif sys.platform == 'linux':
     driverPath = './web_Drivers/chromedriver_linux64/chromedriver'
 else:
     raise ValueError("Unsupported OS")
+
+# setting chrome options
 options = Options()
-options.add_argument('--headless')
+if(not debug):
+   options.add_argument('--headless')
+   options.add_argument('--no-sandbox')
+   options.add_argument('--disable-dev-shm-usage')
+   options.add_argument('--disable-gpu')
 service = Service(driverPath)
 driver = webdriver.Chrome(service=service, options=options)
 
@@ -59,16 +68,29 @@ cur.execute('''CREATE TABLE Page
               raw_html TEXT,
               last_modified TEXT,
               size INTEGER,
-              parent_url TEXT,
+              parent_page_id INTEGER,
               hash TEXT
               )''')
 
-# creating a link table for child links
-cur.execute('''CREATE TABLE Link
+# creating a parent link table for parent links
+cur.execute('''CREATE TABLE ParentLink
                 (link_id INTEGER PRIMARY KEY,
                 page_id INTEGER,
+                parent_page_id INTEGER,
+                Foreign Key(page_id) REFERENCES Page(page_id),
+                Foreign Key(parent_page_id) REFERENCES Page(page_id),
+                UNIQUE(page_id, parent_page_id) ON CONFLICT IGNORE
+                )''')
+
+# creating a child link table for child links
+cur.execute('''CREATE TABLE ChildLink
+                (link_id INTEGER PRIMARY KEY,
+                page_id INTEGER,
+                child_page_id INTEGER,
                 child_url TEXT,
-                Foreign Key(page_id) REFERENCES Page(page_id)
+                Foreign Key(page_id) REFERENCES Page(page_id),
+                Foreign Key(child_page_id) REFERENCES Page(page_id),
+                UNIQUE(page_id, child_url) ON CONFLICT IGNORE
                 )''')
 
 # creating a term table for keywords
@@ -216,12 +238,15 @@ def getPage(curUrl, bfsQueue):
 # and the first 10 links on the page, as well as top 10 keywords along with their frequency
 
 # the function to recursively scrape the pages
-def scrape(curUrl, targetVisited, parentUrl, bfsQueue):
+def scrape(curUrl, targetVisited, parentID, bfsQueue):
 
     curUrl = canonicalize(curUrl)
 
     # base case
     if curUrl in visited:
+        # if the curUrl has already been visited, the parentURL should be added to the parent table for this pageID, as found from the curUrl
+        visitPageID = cur.execute('SELECT page_id FROM Page WHERE url=?', (curUrl,)).fetchone()[0]
+        cur.execute('INSERT OR IGNORE INTO ParentLink (page_id, parent_page_id) VALUES (?, ?)', (visitPageID, parentID))
         return
     elif len(visited) >= targetVisited:
         return
@@ -276,13 +301,22 @@ def scrape(curUrl, targetVisited, parentUrl, bfsQueue):
         titleFreq = Counter(titleStems).most_common()
 
         # inserting the page into the Page table
-        cur.execute('''INSERT INTO Page (url, title, content, raw_html, last_modified, size, parent_url, hash) VALUES (?, ?, ?, ?, ?, ?, ?, ?)''', (curUrl, title, text, rawHTML, lastModified, size, parentUrl, hash))
+        cur.execute('''INSERT INTO Page (url, title, content, raw_html, last_modified, size, parent_page_id, hash) VALUES (?, ?, ?, ?, ?, ?, ?, ?)''', (curUrl, title, text, rawHTML, lastModified, size, parentID, hash))
         pageID = cur.lastrowid
 
-        # inserting the child links into the Link table
+        # inserting the child links into the ChildLink table (parent links are handled when the child is visited)
         for link in links:
-            cur.execute('''INSERT INTO Link (page_id, child_url) VALUES (?, ?)''', (pageID, link))
-        
+            cur.execute('''INSERT INTO ChildLink (page_id, child_page_id, child_url) VALUES (?, NULL, ?)''', (pageID, link))
+
+        # updating the child link table with the parentID when we are working on the child
+        # we find child links with matching parentID as page_id and child_url as curUrl
+        # we then update the child_page_id to be the pageID of the current page
+        # this is done for all child links with the same parentID and curUrl
+        cur.execute('''UPDATE ChildLink SET child_page_id = ? WHERE page_id = ? AND child_url = ?''', (pageID, parentID, curUrl))
+
+        if(parentID is not None):
+            cur.execute('''INSERT INTO ParentLink (page_id, parent_page_id) VALUES (?, ?)''', (pageID, parentID))
+
         # inserting into the term table, if the term is already in the table, it will be skipped
         for term in set(titleStems + contentStems):
             cur.execute('''INSERT OR IGNORE INTO Term (term) VALUES (?)''', (term,))
@@ -322,6 +356,9 @@ def scrape(curUrl, targetVisited, parentUrl, bfsQueue):
         # add to visited set
         visited.add(curUrl)
 
+        if(debug):
+            print("Remaining pages to scrape: " + (str(targetVisited - len(visited))))
+
         # move on to the next page to keep scraping until we reach the target number of pages or we run out of pages to scrape
         # we are doing so in a breadth-first manner
         # we will use a queue to keep track of the pages to scrape
@@ -329,13 +366,11 @@ def scrape(curUrl, targetVisited, parentUrl, bfsQueue):
 
         bfsQueue.extend(link for link in links if link not in visited)
 
-
-
         # start scraping
         while bfsQueue:
             nextLink = bfsQueue.popleft()
             if nextLink not in visited and not None:
-                scrape(nextLink, targetVisited, curUrl, bfsQueue)
+                scrape(nextLink, targetVisited, pageID, bfsQueue)
 
 # debugging execution
 if debug:
@@ -352,4 +387,4 @@ else: # command line execution for spideyTest.py & TAs
     cur.close()
     conn.close()
     outputDatabase()
-driver.close()
+driver.quit()
