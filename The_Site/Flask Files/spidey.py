@@ -3,6 +3,7 @@ import os
 import sqlite3
 import re
 import hashlib
+import sqlalchemy
 from sqlalchemy import create_engine, Column, Integer, Text, ForeignKey
 from sqlalchemy.orm import relationship, sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
@@ -103,9 +104,21 @@ class Term(Base):
     term_id = Column(Integer, primary_key=True)
     term = Column(Text)
 
-# define the TermFrequency model
-class TermFrequency(Base):
-    __tablename__ = 'TermFrequency'
+# define the TitleTermFrequency model
+
+class TitleTermFrequency(Base):
+    __tablename__ = 'TitleTermFrequency'
+
+    page_id = Column(Integer, ForeignKey('Page.page_id'), primary_key=True)
+    term_id = Column(Integer, ForeignKey('Term.term_id'), primary_key=True)
+    frequency = Column(Integer)
+
+    page = relationship("Page")
+    term = relationship("Term")
+
+# define the ContentTermFrequency model
+class ContentTermFrequency(Base):
+    __tablename__ = 'ContentTermFrequency'
 
     page_id = Column(Integer, ForeignKey('Page.page_id'), primary_key=True)
     term_id = Column(Integer, ForeignKey('Term.term_id'), primary_key=True)
@@ -156,6 +169,81 @@ class ContentIndex(Base):
     term = relationship("Term")
     page = relationship("Page")
 
+# define the Bigram model
+class Bigram(Base):
+    __tablename__ = 'Bigram'
+
+    bigram_id = Column(Integer, primary_key=True)
+    term1_id = Column(Integer, ForeignKey('Term.term_id'))
+    term2_id = Column(Integer, ForeignKey('Term.term_id'))
+
+    term1 = relationship("Term", foreign_keys=[term1_id])
+    term2 = relationship("Term", foreign_keys=[term2_id])
+
+# define the TitleBigramPosition model
+class TitleBigramPosition(Base):
+    __tablename__ = 'TitleBigramPosition'
+
+    page_id = Column(Integer, ForeignKey('Page.page_id'), primary_key=True)
+    bigram_id = Column(Integer, ForeignKey('Bigram.bigram_id'), primary_key=True)
+    position_list = Column(Text)
+    frequency = Column(Integer)
+
+    page = relationship("Page")
+    bigram = relationship("Bigram")
+
+# define the ContentBigramPosition model
+
+class ContentBigramPosition(Base):
+    __tablename__ = 'ContentBigramPosition'
+
+    page_id = Column(Integer, ForeignKey('Page.page_id'), primary_key=True)
+    bigram_id = Column(Integer, ForeignKey('Bigram.bigram_id'), primary_key=True)
+    position_list = Column(Text)
+    frequency = Column(Integer)
+
+    page = relationship("Page")
+    bigram = relationship("Bigram")
+
+# define the Trigram model
+class Trigram(Base):
+    __tablename__ = 'Trigram'
+
+    trigram_id = Column(Integer, primary_key=True)
+    term1_id = Column(Integer, ForeignKey('Term.term_id'))
+    term2_id = Column(Integer, ForeignKey('Term.term_id'))
+    term3_id = Column(Integer, ForeignKey('Term.term_id'))
+
+    term1 = relationship("Term", foreign_keys=[term1_id])
+    term2 = relationship("Term", foreign_keys=[term2_id])
+    term3 = relationship("Term", foreign_keys=[term3_id])
+
+# define the TitleTrigramPosition model
+
+class TitleTrigramPosition(Base):
+    __tablename__ = 'TitleTrigramPosition'
+
+    page_id = Column(Integer, ForeignKey('Page.page_id'), primary_key=True)
+    trigram_id = Column(Integer, ForeignKey('Trigram.trigram_id'), primary_key=True)
+    position_list = Column(Text)
+    frequency = Column(Integer)
+
+    page = relationship("Page")
+    trigram = relationship("Trigram")
+
+# define the ContentTrigramPosition model
+
+class ContentTrigramPosition(Base):
+    __tablename__ = 'ContentTrigramPosition'
+
+    page_id = Column(Integer, ForeignKey('Page.page_id'), primary_key=True)
+    trigram_id = Column(Integer, ForeignKey('Trigram.trigram_id'), primary_key=True)
+    position_list = Column(Text)
+    frequency = Column(Integer)
+
+    page = relationship("Page")
+    trigram = relationship("Trigram")
+
 # function for API call to remake the database based off of the given parameters
 def triggerScraping(seedUrl, targetVisited):
     visited = set()
@@ -169,18 +257,177 @@ def triggerScraping(seedUrl, targetVisited):
 
     # adding an sqlite3 sqlachemy database
     sessionFactory = makeAlchemy(engine)
+
+    # scrape
     scrapeSession = sessionFactory()
     scrape(seedUrl, targetVisited, None, bfsQueue, visited, driver, scrapeSession)
-    
-    # close the session and driver
+    scrapeSession.commit()
     scrapeSession.close()
+
+    # generate the bigrams and trigrams
+    bigramTrigramSession = sessionFactory()
+    pages = bigramTrigramSession.query(Page).all()
+    for page in pages:
+        generateBigramsTrigrams(bigramTrigramSession, page.page_id)
+    bigramTrigramSession.commit()
+    bigramTrigramSession.close()
+
+    # precompute the vectors
+    preConstructionSession = sessionFactory()
+    for page in pages:
+        preConstructVectors()
+    preConstructionSession.commit()
+    preConstructionSession.close()
+    
+    # close the sessions and driver
     driver.close()
 
-# function to take an exisitng database & precalculate the vectors via the TF-IDF algorithm
-# it will add the vectors to the database as well
-def preConstructVectors(sessionFactory):
-    session = sessionFactory()
+# function to take the exisitng database & precalculate the vectors via the TF-IDF algorithm
+# it will do so on a per page basis, and will do so for the term, bigram, and trigram vectors for both the title and content
+def preConstructVectors(session, pageID):
+    # get the terms, bigrams, and trigrams for the page
+    
     pass
+
+# Double Check the names used when adding to the database here, they may be off
+# function to generate the bigrams and trigrams for a given page & add them to the database
+def generateBigramsTrigrams(session, pageID):
+    # Retrieve the term IDs and position lists for the page's content and title
+    content_query = session.query(ContentTermPosition.term_id, ContentTermPosition.position_list).filter(ContentTermPosition.page_id == pageID)
+    title_query = session.query(TitleTermPosition.term_id, TitleTermPosition.position_list).filter(TitleTermPosition.page_id == pageID)
+    content_result = content_query.all()
+    title_result = title_query.all()
+
+    # Compute the position lists for the bigrams and trigrams in the content
+    content_bigram_positions = {}
+    content_trigram_positions = {}
+    for i in range(len(content_result) - 1):
+        term_id1, positions1 = content_result[i]
+        term_id2, positions2 = content_result[i+1]
+        content_bigram_positions[(term_id1, term_id2)] = []
+        for pos1 in positions1.split(','):
+            for pos2 in positions2.split(','):
+                content_bigram_positions[(term_id1, term_id2)].append(int(pos1) + 1)
+                content_bigram_positions[(term_id1, term_id2)].append(int(pos2) + 1)
+        if i < len(content_result) - 2:
+            term_id3, positions3 = content_result[i+2]
+            content_trigram_positions[(term_id1, term_id2, term_id3)] = []
+            for pos1 in positions1.split(','):
+                for pos2 in positions2.split(','):
+                    for pos3 in positions3.split(','):
+                        content_trigram_positions[(term_id1, term_id2, term_id3)].append(int(pos1) + 1)
+                        content_trigram_positions[(term_id1, term_id2, term_id3)].append(int(pos2) + 1)
+                        content_trigram_positions[(term_id1, term_id2, term_id3)].append(int(pos3) + 1)
+
+    # Compute the position lists for the bigrams and trigrams in the title
+    title_bigram_positions = {}
+    title_trigram_positions = {}
+    for i in range(len(title_result) - 1):
+        term_id1, positions1 = title_result[i]
+        term_id2, positions2 = title_result[i+1]
+        title_bigram_positions[(term_id1, term_id2)] = []
+        for pos1 in positions1.split(','):
+            for pos2 in positions2.split(','):
+                title_bigram_positions[(term_id1, term_id2)].append(int(pos1) + 1)
+                title_bigram_positions[(term_id1, term_id2)].append(int(pos2) + 1)
+        if i < len(title_result) - 2:
+            term_id3, positions3 = title_result[i+2]
+            title_trigram_positions[(term_id1, term_id2, term_id3)] = []
+            for pos1 in positions1.split(','):
+                for pos2 in positions2.split(','):
+                    for pos3 in positions3.split(','):
+                        title_trigram_positions[(term_id1, term_id2, term_id3)].append(int(pos1) + 1)
+                        title_trigram_positions[(term_id1, term_id2, term_id3)].append(int(pos2) + 1)
+                        title_trigram_positions[(term_id1, term_id2, term_id3)].append(int(pos3) + 1)
+
+    # Add the bigrams and trigrams to the database
+    # first making sure the bigrams and trigrams are actually in the database before handling positons & frequencies
+    for bigram, positions in content_bigram_positions.items(): # checking for bigrams in content
+        term1_id, term2_id = bigram
+        # check if the bigram already exists in the database
+        existing_bigram = session.query(Bigram).filter_by(term1_id=term1_id, term2_id=term2_id).first()
+        if not existing_bigram:
+            # create a new bigram and add it to the database
+            new_bigram = Bigram(term1_id=term1_id, term2_id=term2_id)
+            session.add(new_bigram)
+            session.flush()
+
+    for bigram, positions, in title_bigram_positions.items(): # checking for bigrams in title
+        term1_id, term2_id = bigram
+        # check if the bigram already exists in the database
+        existing_bigram = session.query(Bigram).filter_by(term1_id=term1_id, term2_id=term2_id).first()
+        if not existing_bigram:
+            # create a new bigram and add it to the database
+            new_bigram = Bigram(term1_id=term1_id, term2_id=term2_id)
+            session.add(new_bigram)
+            session.flush()
+
+    for trigram, positions in content_trigram_positions.items(): # checking for trigrams in content
+        term1_id, term2_id, term3_id = trigram
+        # check if the trigram already exists in the database
+        existing_trigram = session.query(Trigram).filter_by(term1_id=term1_id, term2_id=term2_id, term3_id=term3_id).first()
+        if not existing_trigram:
+            # create a new trigram and add it to the database
+            new_trigram = Trigram(term1_id=term1_id, term2_id=term2_id, term3_id=term3_id)
+            session.add(new_trigram)
+            session.flush()
+    
+    for trigram, positions in title_trigram_positions.items(): # checking for trigrams in title
+        term1_id, term2_id, term3_id = trigram
+        # check if the trigram already exists in the database
+        existing_trigram = session.query(Trigram).filter_by(term1_id=term1_id, term2_id=term2_id, term3_id=term3_id).first()
+        if not existing_trigram:
+            # create a new trigram and add it to the database
+            new_trigram = Trigram(term1_id=term1_id, term2_id=term2_id, term3_id=term3_id)
+            session.add(new_trigram)
+            session.flush()
+
+    # now that we have the bigrams and trigrams in the database, we can add the positions and frequencies to the relevant tables
+    # first the content bigrams
+    for bigram, positions in content_bigram_positions.items():
+        term1_id, term2_id = bigram
+        bigram_id = session.query(Bigram.id).filter_by(term1_id=term1_id, term2_id=term2_id).one().bigram_id
+        
+        # count the number of times the bigram appears in the content
+        frequency = len(positions)
+        # create the object for the content bigram position table
+        new_content_bigram_position = ContentBigramPosition(page_id = pageID, bigram_id = bigram_id, position_list = positions, frequency = frequency)
+        session.add(new_content_bigram_position)
+    
+    # now the title bigrams
+    for bigram, positions in title_bigram_positions.items():
+        term1_id, term2_id = bigram
+        bigram_id = session.query(Bigram.id).filter_by(term1_id=term1_id, term2_id=term2_id).one().bigram_id
+        
+        # count the number of times the bigram appears in the title
+        frequency = len(positions)
+        # create the object for the title bigram position table
+        new_title_bigram_position = TitleBigramPosition(page_id = pageID, bigram_id = bigram_id, position_list = positions, frequency = frequency)
+        session.add(new_title_bigram_position)
+
+    # now the content trigrams
+    for trigram, positions in content_trigram_positions.items():
+        term1_id, term2_id, term3_id = trigram
+        trigram_id = session.query(Trigram.id).filter_by(term1_id=term1_id, term2_id=term2_id, term3_id=term3_id).one().trigram_id
+        
+        # count the number of times the trigram appears in the content
+        frequency = len(positions)
+        # create the object for the content trigram position table
+        new_content_trigram_position = ContentTrigramPosition(page_id = pageID, trigram_id = trigram_id, position_list = positions, frequency = frequency)
+        session.add(new_content_trigram_position)
+    
+    # now the title trigrams
+    for trigram, positions in title_trigram_positions.items():
+        term1_id, term2_id, term3_id = trigram
+        trigram_id = session.query(Trigram.id).filter_by(term1_id=term1_id, term2_id=term2_id, term3_id=term3_id).one().trigram_id
+        
+        # count the number of times the trigram appears in the title
+        frequency = len(positions)
+        # create the object for the title trigram position table
+        new_title_trigram_position = TitleTrigramPosition(page_id = pageID, trigram_id = trigram_id, position_list = positions, frequency = frequency)
+        session.add(new_title_trigram_position)
+
+    # session closed outside for clarity
 
 # function to take database and format output for API JSON return, in response to queries
 # we might add more parameters to this function later
@@ -397,10 +644,16 @@ def scrape(curUrl, targetVisited, parentID, bfsQueue, visited, driver, session):
                 newTerm = Term(term=term)
                 session.add(newTerm)
 
-        # inserting into the term frequency table
+        # inserting into the content term frequency table
         for stem, freq in contentFreq:
             termID = session.query(Term).filter_by(term=stem).one().term_id
-            newTermFreq = TermFrequency(page_id=pageID, term_id=termID, frequency=freq)
+            newTermFreq = ContentTermFrequency(page_id=pageID, term_id=termID, frequency=freq)
+            session.add(newTermFreq)
+
+        # inserting into the title term frequency table
+        for stem, freq in titleFreq:
+            termID = session.query(Term).filter_by(term=stem).one().term_id
+            newTermFreq = TitleTermFrequency(page_id=pageID, term_id=termID, frequency=freq)
             session.add(newTermFreq)
             
         # inserting into the ContentTermPosition table
