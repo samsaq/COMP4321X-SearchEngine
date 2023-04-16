@@ -3,7 +3,8 @@ import os
 import sqlite3
 import re
 import hashlib
-import sqlite_vss
+import numpy as np
+import pickle
 from bs4 import BeautifulSoup
 from nltk.stem import PorterStemmer
 from collections import deque, Counter
@@ -15,7 +16,9 @@ from selenium.webdriver.chrome.service import Service
 from flask import Flask
 from math import log
 from flask_sqlalchemy import SQLAlchemy
-from flask_sqlalchemy import Column, Integer, Text, ForeignKey, func
+from flask_sqlalchemy import Column, Integer, Text, ForeignKey, func, PickleType
+from numpy import dot
+from numpy.linalg import norm
 
 # creating a web scraper with selenium, beautifulsoup, and sqlite to get X pages from the given root url into a database setup for later searching
 
@@ -237,25 +240,17 @@ class ContentTrigramPosition(db.Model):
     page = db.relationship("Page")
     trigram = db.relationship("Trigram")
 
-# define the model for the PageVectors table using sqlite-vss
+# define the model for the PageVectors table
 class PageVectors(db.Model):
     __tablename__ = 'PageVectors'
-    page_id = db.Column(db.Integer, ForeignKey('Page.page_id'), primary_key=True)
-    title_vector = db.Column(db.LargeBinary)
-    content_vector = db.Column(db.LargeBinary)
-    __table_args__ = {
-        'extend_existing': True,
-        'sqlite': {
-            'table': 'PageVectors',
-            'without_rowid': True,
-            'key': 'vss0',
-            'columns': {
-                'title_vector': 'title_vector',
-                'content_vector': 'content_vector'
-            }
-        }
-    }
+
+    page_id = Column(Integer, ForeignKey('Page.page_id'), primary_key=True)
+    title_vector = Column(PickleType, nullable=False)
+    content_vector = Column(PickleType, nullable=False)
+    weighted_vector = Column(PickleType, nullable=False)
+
     page = db.relationship("Page")
+
 
 # define the model for overall database information
 class DatabaseInfo(db.Model):
@@ -279,12 +274,6 @@ def triggerScraping(seedUrl, targetVisited):
         os.remove('spidey.db')
     except OSError:
         pass
-
-    # load the sql-vss extension
-    conn = session.connection()
-    conn.enable_load_extension(True)
-    sqlite_vss.load(conn)
-    conn.enable_load_extension(False)
 
     # adding an sqlite3 sqlachemy database
     session = makeAlchemy()
@@ -319,7 +308,6 @@ def triggerScraping(seedUrl, targetVisited):
 
     # close the session and driver
     session.commit()
-    conn.close()
     session.close()
     driver.close()
 
@@ -329,9 +317,10 @@ def preConstructVectors(session, pages, avgTitleLength, avgContentLength):
     
     for page in pages:
         titleVector, contentVector = BM25Vector(session, page.page_id, avgTitleLength, avgContentLength)
+        weightedVector = weightedVector(titleVector, contentVector) # currently using default weights for title and content (0.8, 0.2)
         # now to add the vectors to the database
-        page.title_vector = titleVector
-        page.content_vector = contentVector
+        pageVector = PageVectors(page_id=page.page_id, title_vector=pickle.dumps(titleVector), content_vector=pickle.dumps(contentVector), weighted_vector=pickle.dumps(weightedVector))
+        session.add(pageVector)
 
 # a BM25 function to take the given page, and reuturns the title and content vectors for the page
 def BM25Vector(session, pageID, avgTitleLength, avgContentLength):
@@ -341,9 +330,9 @@ def BM25Vector(session, pageID, avgTitleLength, avgContentLength):
 
     # use the BM25 algorithm to calculate the term vectors for the title and content seperately
     # variable presets are k1 = 2.5, b = 0.75, delta = 0.25
-    title_vector = {}
-    content_vector = {}
-    for term, term_frequency in title_terms:
+    title_vector = np.zeros(len(title_terms))
+    content_vector = np.zeros(len(content_terms))
+    for i, (term, term_frequency) in enumerate(title_terms):
         df = session.query(func.count(TitleTermFrequency.page_id)).filter_by(term_id=term.term_id).scalar()
         idf = log((session.query(func.count(Page.page_id)).scalar() - df + 0.5) / (df + 0.5))
 
@@ -351,9 +340,9 @@ def BM25Vector(session, pageID, avgTitleLength, avgContentLength):
         tf_idf = ((2.5 * term_frequency.frequency) / (term_frequency.frequency + 1.5 * (0.25 + 0.75 * (len(page.content) / avgTitleLength)))) * idf
 
         # append to the title vector
-        title_vector.append(tf_idf)
+        title_vector[i] = tf_idf
 
-    for term, term_frequency in content_terms:
+    for i, (term, term_frequency) in enumerate(content_terms):
         df = session.query(func.count(ContentTermFrequency.page_id)).filter_by(term_id=term.term_id).scalar()
         idf = log((session.query(func.count(Page.page_id)).scalar() - df + 0.5) / (df + 0.5))
 
@@ -361,37 +350,57 @@ def BM25Vector(session, pageID, avgTitleLength, avgContentLength):
         tf_idf = ((2.5 * term_frequency.frequency) / (term_frequency.frequency + 1.5 * (0.25 + 0.75 * (len(page.content) / avgContentLength)))) * idf
 
         # append to the content vector
-        content_vector.append(tf_idf)
+        content_vector[i] = tf_idf
 
-    # return the two vectors
+    # return the two vectors as numpy arrays
     return title_vector, content_vector
 
-# function to get a BM25 vector for a given query (the query has been preprocessesd already)
-def getBM25QueryVector (session, queryFreq):
+# function to get a BM25 vector for a given query (the query has been preprocessesd already for stemming and stopword removal, and is now a list of terms)
+def getBM25QueryVector (session, queryFreq): # queryFreq is a list of tuples of (term, frequency) sorted by frequency
     # get the database information needed to calculate the BM25 vector
     databaseInfo = session.query(DatabaseInfo).first()
-    avgTitleLength = databaseInfo.avg_title_length
-    avgContentLength = databaseInfo.avg_content_length
 
-    # calculate the BM25 vector for the query using our tuple list of (term, frequency) sorted by frequency
+    # calculate the BM25 vector and return a numpy array
     # variable presets are k1 = 2.5, b = 0.75, delta = 0.25, as in the BM25Vector function
-    queryVector = {}
-    for term, frequency in queryFreq:
-        # come back to this after finishing the weighted vector function (to weight vectors towards the title)
-        pass
+    k1 = 2.5
+    b = 0.75
+    delta = 0.25
+    numTerms = len(queryFreq)
+    queryVector = np.zeros(databaseInfo.num_terms)
+    for i in range(numTerms):
+        term = queryFreq[i][0]
+        termFreq = queryFreq[i][1]
+        termID = session.query(Term.term_id).filter_by(term=term).one().term_id
+        idf = get_bm25_idf(term)
+        numerator = idf * termFreq * (k1 + 1)
+        denominator = termFreq + k1 * (1 - b + b * get_n(term) / databaseInfo.num_docs) + delta
+        queryVector[termID] = numerator / denominator
+    return queryVector
+
+# helper function for the above - gets the idf of a given term overall (for both title and content)
+def get_bm25_idf(term):
+    N = db.session.query(Page).count() # total number of documents
+    n = get_n(term) # number of documents that contain the term
+    idf = log((N-n+0.5)/(n+0.5))
+    return idf
+
+# helper function for the above - gets the number of pages that contain the given term
+def get_n(term):
+    title_docs = set([freq.page_id for freq in TitleTermFrequency.query.filter_by(term=term)])
+    content_docs = set([freq.page_id for freq in ContentTermFrequency.query.filter_by(term=term)])
+    n = len(title_docs.union(content_docs))
+    return n
 
 # function to create a weighted composite vector with title and content vectors
-def getWeightedVector(session, pageID, titleVector, contentVector, titleWeight=0.8, contentWeight=0.2):
-    pass
+def getWeightedVector(titleVector, contentVector, titleWeight=0.8, contentWeight=0.2):
+    # Take a weighted average of the title and body vectors to create a composite vector
+    weightedVector = titleWeight * titleVector + contentWeight * contentVector
+    
+    # Return the weighted composite vector
+    return weightedVector
 
-# function to search based off of the given query
-def search(session, query):
-    # load the sql-vss extension
-    conn = session.connection()
-    conn.enable_load_extension(True)
-    sqlite_vss.load(conn)
-    conn.enable_load_extension(False)
-
+# function to search based off of the given query - currently has no phrase search
+def search(session, query, numResults=50):
     # preprocess the query string for the search
     queryTokens = re.findall(r'\b\w+\b', query.lower())
     # remove stopwords from the query
@@ -401,13 +410,35 @@ def search(session, query):
     queryStems = [ps.stem(token) for token in queryTokens]
     # count frequency of each word, making a list of tuples
     queryFreq = Counter(queryStems).most_common()
-    # get the BM25 vector for the query
+    # get the BM25 vector for the query as a numpy array
     queryVector = getBM25QueryVector(session, queryFreq)
     # now to use the query vector to search the database with cosine similarity
+    # we need to get the numResults most similar pages to the query
 
-    # close connections to the database
-    conn.close()
+    # get the database information needed for the search
+    databaseInfo = session.query(DatabaseInfo).first()
+    numDocs = databaseInfo.num_docs
 
+    # calculate the cosine similarity between the query vector and all document vectors
+    docVectors = np.zeros((numDocs, databaseInfo.num_terms))
+    for i in range(numDocs):
+        docID = i + 1
+        docVectors[i] = session.query(PageVectors).filter_by(page_id=docID).one().weighted_vector
+    docSims = cosine_similarity(queryVector.reshape(1, -1), docVectors).flatten()
+
+    # sort the document similarities in descending order and get the top numResults
+    topDocIDs = np.argsort(docSims)[::-1][:numResults]
+    topDocSims = docSims[topDocIDs]
+    topPages = []
+    for i in range(numResults):
+        docID = topDocIDs[i] + 1
+        page = session.query(Page).filter_by(id=docID).one()
+        topPages.append((page.title, page.url, topDocSims[i]))
+
+    return topPages
+
+def cosine_similarity(a, b):
+    return dot(a, b) / (norm(a) * norm(b))
 
 # Double Check the names used when adding to the database here, they may be off
 # function to generate the bigrams and trigrams for a given page & add them to the database
@@ -548,12 +579,6 @@ def generateBigramsTrigrams(session, pageID):
         session.add(new_title_trigram_position)
 
     # session closed outside for clarity
-
-# function to take database and format output for API JSON return, in response to queries
-# we might add more parameters to this function later
-# Incomplete for now
-def reformatData():
-    pass
 
 # creating an sqlachemcy database
 def makeAlchemy():
