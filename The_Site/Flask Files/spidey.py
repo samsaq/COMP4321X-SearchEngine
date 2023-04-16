@@ -3,11 +3,7 @@ import os
 import sqlite3
 import re
 import hashlib
-import sqlalchemy
-from sqlalchemy import create_engine, Column, Integer, Text, ForeignKey, func
-from sqlalchemy.orm import relationship, sessionmaker
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm.exc import NoResultFound
+import sqlite_vss
 from bs4 import BeautifulSoup
 from nltk.stem import PorterStemmer
 from collections import deque, Counter
@@ -18,6 +14,8 @@ from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service
 from flask import Flask
 from math import log
+from flask_sqlalchemy import SQLAlchemy
+from flask_sqlalchemy import Column, Integer, Text, ForeignKey, func
 
 # creating a web scraper with selenium, beautifulsoup, and sqlite to get X pages from the given root url into a database setup for later searching
 
@@ -53,14 +51,12 @@ with open('stopwords.txt', 'r') as f:
     for line in f:
         stopwords.append(line.strip())
 
-# create the database engine
-engine = create_engine('spidey.db', echo=False) # use echo for debugging later - it will print out all the SQL commands being executed
-# create a declarative base for SQLAlchemy models
-Base = declarative_base()
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///spidey.db'
+db = SQLAlchemy(app)
 
 # defining database models:
 # define the Page model
-class Page(Base):
+class Page(db.Model):
     __tablename__ = 'Page'
 
     page_id = Column(Integer, primary_key=True)
@@ -72,24 +68,22 @@ class Page(Base):
     size = Column(Integer)
     parent_page_id = Column(Integer, ForeignKey('Page.page_id'))
     hash = Column(Text)
-    title_vector = Column(Text)
-    content_vector = Column(Text)
 
-    parent_page = relationship("Page", remote_side=[page_id])
+    parent_page = db.relationship("Page", remote_side=[page_id])
 
 # define the ParentLink model
-class ParentLink(Base):
+class ParentLink(db.Model):
     __tablename__ = 'ParentLink'
 
     link_id = Column(Integer, primary_key=True)
     page_id = Column(Integer, ForeignKey('Page.page_id'))
     parent_page_id = Column(Integer, ForeignKey('Page.page_id'))
 
-    page = relationship("Page", foreign_keys=[page_id])
-    parent_page = relationship("Page", foreign_keys=[parent_page_id])
+    page = db.relationship("Page", foreign_keys=[page_id])
+    parent_page = db.relationship("Page", foreign_keys=[parent_page_id])
 
 # define the ChildLink model
-class ChildLink(Base):
+class ChildLink(db.Model):
     __tablename__ = 'ChildLink'
 
     link_id = Column(Integer, primary_key=True)
@@ -97,94 +91,93 @@ class ChildLink(Base):
     child_page_id = Column(Integer, ForeignKey('Page.page_id'))
     child_url = Column(Text)
 
-    page = relationship("Page", foreign_keys=[page_id])
-    child_page = relationship("Page", foreign_keys=[child_page_id])
+    page = db.relationship("Page", foreign_keys=[page_id])
+    child_page = db.relationship("Page", foreign_keys=[child_page_id])
 
 # define the Term model
-class Term(Base):
+class Term(db.Model):
     __tablename__ = 'Term'
 
     term_id = Column(Integer, primary_key=True)
     term = Column(Text)
 
 # define the TitleTermFrequency model
-
-class TitleTermFrequency(Base):
+class TitleTermFrequency(db.Model):
     __tablename__ = 'TitleTermFrequency'
 
     page_id = Column(Integer, ForeignKey('Page.page_id'), primary_key=True)
     term_id = Column(Integer, ForeignKey('Term.term_id'), primary_key=True)
     frequency = Column(Integer)
 
-    page = relationship("Page")
-    term = relationship("Term")
+    page = db.relationship("Page")
+    term = db.relationship("Term")
 
 # define the ContentTermFrequency model
-class ContentTermFrequency(Base):
+class ContentTermFrequency(db.Model):
     __tablename__ = 'ContentTermFrequency'
 
     page_id = Column(Integer, ForeignKey('Page.page_id'), primary_key=True)
     term_id = Column(Integer, ForeignKey('Term.term_id'), primary_key=True)
     frequency = Column(Integer)
 
-    page = relationship("Page")
-    term = relationship("Term")
+    page = db.relationship("Page")
+    term = db.relationship("Term")
 
 # define the TitleTermPosition model
-class TitleTermPosition(Base):
+class TitleTermPosition(db.Model):
     __tablename__ = 'TitleTermPosition'
 
     page_id = Column(Integer, ForeignKey('Page.page_id'), primary_key=True)
     term_id = Column(Integer, ForeignKey('Term.term_id'), primary_key=True)
     position_list = Column(Text)
 
-    page = relationship("Page")
-    term = relationship("Term")
+    page = db.relationship("Page")
+    term = db.relationship("Term")
 
 # define the ContentTermPosition model
-class ContentTermPosition(Base):
+class ContentTermPosition(db.Model):
     __tablename__ = 'ContentTermPosition'
 
     page_id = Column(Integer, ForeignKey('Page.page_id'), primary_key=True)
     term_id = Column(Integer, ForeignKey('Term.term_id'), primary_key=True)
     position_list = Column(Text)
 
-    page = relationship("Page")
-    term = relationship("Term")
+    page = db.relationship("Page")
+    term = db.relationship("Term")
 
 # define the TitleIndex model
-class TitleIndex(Base):
+class TitleIndex(db.Model):
     __tablename__ = 'TitleIndex'
 
     term_id = Column(Integer, ForeignKey('Term.term_id'), primary_key=True)
     page_id = Column(Integer, ForeignKey('Page.page_id'), primary_key=True)
 
-    term = relationship("Term")
-    page = relationship("Page")
+    term = db.relationship("Term")
+    page = db.relationship("Page")
 
 # define the ContentIndex model
-class ContentIndex(Base):
+class ContentIndex(db.Model):
     __tablename__ = 'ContentIndex'
 
     term_id = Column(Integer, ForeignKey('Term.term_id'), primary_key=True)
     page_id = Column(Integer, ForeignKey('Page.page_id'), primary_key=True)
 
-    term = relationship("Term")
-    page = relationship("Page")
+    term = db.relationship("Term")
+    page = db.relationship("Page")
 
 # define the Bigram model
-class Bigram(Base):
+class Bigram(db.Model):
     __tablename__ = 'Bigram'
 
     bigram_id = Column(Integer, primary_key=True)
     term1_id = Column(Integer, ForeignKey('Term.term_id'))
     term2_id = Column(Integer, ForeignKey('Term.term_id'))
 
-    term1 = relationship("Term", foreign_keys=[term1_id])
-    term2 = relationship("Term", foreign_keys=[term2_id])
+    term1 = db.relationship("Term", foreign_keys=[term1_id])
+    term2 = db.relationship("Term", foreign_keys=[term2_id])
 
 # define the TitleBigramPosition model
-class TitleBigramPosition(Base):
+class TitleBigramPosition(db.Model):
     __tablename__ = 'TitleBigramPosition'
 
     page_id = Column(Integer, ForeignKey('Page.page_id'), primary_key=True)
@@ -192,12 +185,11 @@ class TitleBigramPosition(Base):
     position_list = Column(Text)
     frequency = Column(Integer)
 
-    page = relationship("Page")
-    bigram = relationship("Bigram")
+    page = db.relationship("Page")
+    bigram = db.relationship("Bigram")
 
 # define the ContentBigramPosition model
-
-class ContentBigramPosition(Base):
+class ContentBigramPosition(db.Model):
     __tablename__ = 'ContentBigramPosition'
 
     page_id = Column(Integer, ForeignKey('Page.page_id'), primary_key=True)
@@ -205,11 +197,11 @@ class ContentBigramPosition(Base):
     position_list = Column(Text)
     frequency = Column(Integer)
 
-    page = relationship("Page")
-    bigram = relationship("Bigram")
+    page = db.relationship("Page")
+    bigram = db.relationship("Bigram")
 
 # define the Trigram model
-class Trigram(Base):
+class Trigram(db.Model):
     __tablename__ = 'Trigram'
 
     trigram_id = Column(Integer, primary_key=True)
@@ -217,13 +209,12 @@ class Trigram(Base):
     term2_id = Column(Integer, ForeignKey('Term.term_id'))
     term3_id = Column(Integer, ForeignKey('Term.term_id'))
 
-    term1 = relationship("Term", foreign_keys=[term1_id])
-    term2 = relationship("Term", foreign_keys=[term2_id])
-    term3 = relationship("Term", foreign_keys=[term3_id])
+    term1 = db.relationship("Term", foreign_keys=[term1_id])
+    term2 = db.relationship("Term", foreign_keys=[term2_id])
+    term3 = db.relationship("Term", foreign_keys=[term3_id])
 
 # define the TitleTrigramPosition model
-
-class TitleTrigramPosition(Base):
+class TitleTrigramPosition(db.Model):
     __tablename__ = 'TitleTrigramPosition'
 
     page_id = Column(Integer, ForeignKey('Page.page_id'), primary_key=True)
@@ -231,12 +222,11 @@ class TitleTrigramPosition(Base):
     position_list = Column(Text)
     frequency = Column(Integer)
 
-    page = relationship("Page")
-    trigram = relationship("Trigram")
+    page = db.relationship("Page")
+    trigram = db.relationship("Trigram")
 
 # define the ContentTrigramPosition model
-
-class ContentTrigramPosition(Base):
+class ContentTrigramPosition(db.Model):
     __tablename__ = 'ContentTrigramPosition'
 
     page_id = Column(Integer, ForeignKey('Page.page_id'), primary_key=True)
@@ -244,8 +234,40 @@ class ContentTrigramPosition(Base):
     position_list = Column(Text)
     frequency = Column(Integer)
 
-    page = relationship("Page")
-    trigram = relationship("Trigram")
+    page = db.relationship("Page")
+    trigram = db.relationship("Trigram")
+
+# define the model for the PageVectors table using sqlite-vss
+class PageVectors(db.Model):
+    __tablename__ = 'PageVectors'
+    page_id = db.Column(db.Integer, ForeignKey('Page.page_id'), primary_key=True)
+    title_vector = db.Column(db.LargeBinary)
+    content_vector = db.Column(db.LargeBinary)
+    __table_args__ = {
+        'extend_existing': True,
+        'sqlite': {
+            'table': 'PageVectors',
+            'without_rowid': True,
+            'key': 'vss0',
+            'columns': {
+                'title_vector': 'title_vector',
+                'content_vector': 'content_vector'
+            }
+        }
+    }
+    page = db.relationship("Page")
+
+# define the model for overall database information
+class DatabaseInfo(db.Model):
+    __tablename__ = 'DatabaseInfo'
+
+    database_id = Column(Integer, primary_key=True)
+    num_pages = Column(Integer)
+    num_terms = Column(Integer)
+    num_bigrams = Column(Integer)
+    num_trigrams = Column(Integer)
+    avg_title_length = Column(Integer)
+    avg_content_length = Column(Integer)
 
 # function for API call to remake the database based off of the given parameters
 def triggerScraping(seedUrl, targetVisited):
@@ -258,34 +280,52 @@ def triggerScraping(seedUrl, targetVisited):
     except OSError:
         pass
 
+    # load the sql-vss extension
+    conn = session.connection()
+    conn.enable_load_extension(True)
+    sqlite_vss.load(conn)
+    conn.enable_load_extension(False)
+
     # adding an sqlite3 sqlachemy database
-    sessionFactory = makeAlchemy(engine)
+    session = makeAlchemy()
 
     # scrape
-    session = sessionFactory()
     scrape(seedUrl, targetVisited, None, bfsQueue, visited, driver, session)
     session.commit()
 
-    # generate the bigrams and trigrams
+    # get overall database information
     pages = session.query(Page).all()
+    numPages = len(pages)
+    numTerms = session.query(Term).count()
+    avgTitleLength = session.query(func.avg(Page.title_length)).scalar()
+    avgContentLength = session.query(func.avg(Page.content_length)).scalar()
+
+    # generate the bigrams and trigrams
     for page in pages:
         generateBigramsTrigrams(session, page.page_id)
     session.commit()
 
+    # get the number of bigrams and trigrams
+    numBigrams = session.query(Bigram).count()
+    numTrigrams = session.query(Trigram).count()
+
     # precompute the vectors
-    preConstructVectors(session, pages)
+    preConstructVectors(session, pages, avgTitleLength, avgContentLength)
     session.commit()
     
+    # add the database information to the database
+    databaseInfo = DatabaseInfo(num_pages=numPages, num_terms=numTerms, num_bigrams=numBigrams, num_trigrams=numTrigrams, avg_title_length=avgTitleLength, avg_content_length=avgContentLength)
+    session.add(databaseInfo)
+
     # close the session and driver
+    session.commit()
+    conn.close()
     session.close()
     driver.close()
 
 # function to take the exisitng database & precalculate the vectors via the TF-IDF algorithm
 # it will do so on a per page basis, and will do so for the term, bigram, and trigram vectors for both the title and content
-def preConstructVectors(session, pages):
-    # get the average title and content length for the pages of the database
-    avgTitleLength = session.query(func.avg(Page.title_length)).scalar()
-    avgContentLength = session.query(func.avg(Page.content_length)).scalar()
+def preConstructVectors(session, pages, avgTitleLength, avgContentLength):
     
     for page in pages:
         titleVector, contentVector = BM25Vector(session, page.page_id, avgTitleLength, avgContentLength)
@@ -325,6 +365,49 @@ def BM25Vector(session, pageID, avgTitleLength, avgContentLength):
 
     # return the two vectors
     return title_vector, content_vector
+
+# function to get a BM25 vector for a given query (the query has been preprocessesd already)
+def getBM25QueryVector (session, queryFreq):
+    # get the database information needed to calculate the BM25 vector
+    databaseInfo = session.query(DatabaseInfo).first()
+    avgTitleLength = databaseInfo.avg_title_length
+    avgContentLength = databaseInfo.avg_content_length
+
+    # calculate the BM25 vector for the query using our tuple list of (term, frequency) sorted by frequency
+    # variable presets are k1 = 2.5, b = 0.75, delta = 0.25, as in the BM25Vector function
+    queryVector = {}
+    for term, frequency in queryFreq:
+        # come back to this after finishing the weighted vector function (to weight vectors towards the title)
+        pass
+
+# function to create a weighted composite vector with title and content vectors
+def getWeightedVector(session, pageID, titleVector, contentVector, titleWeight=0.8, contentWeight=0.2):
+    pass
+
+# function to search based off of the given query
+def search(session, query):
+    # load the sql-vss extension
+    conn = session.connection()
+    conn.enable_load_extension(True)
+    sqlite_vss.load(conn)
+    conn.enable_load_extension(False)
+
+    # preprocess the query string for the search
+    queryTokens = re.findall(r'\b\w+\b', query.lower())
+    # remove stopwords from the query
+    queryTokens = [token for token in queryTokens if token not in stopwords]
+    # stem the query
+    ps = PorterStemmer()
+    queryStems = [ps.stem(token) for token in queryTokens]
+    # count frequency of each word, making a list of tuples
+    queryFreq = Counter(queryStems).most_common()
+    # get the BM25 vector for the query
+    queryVector = getBM25QueryVector(session, queryFreq)
+    # now to use the query vector to search the database with cosine similarity
+
+    # close connections to the database
+    conn.close()
+
 
 # Double Check the names used when adding to the database here, they may be off
 # function to generate the bigrams and trigrams for a given page & add them to the database
@@ -473,15 +556,15 @@ def reformatData():
     pass
 
 # creating an sqlachemcy database
-def makeAlchemy(engine):
+def makeAlchemy():
     # create the session (replaces the connection and cursor)
-    sessionFactory = sessionmaker(bind=engine)
+    session = db.session
 
     # create the tables
-    Base.metadata.create_all(engine)
+    db.create_all()
 
     # return the sessionFactory - this is what we will use to make sessions to interact with the database
-    return sessionFactory
+    return session
 
 # function to hash pages for later comparison (Reserved for page to page in database comparison in the future, like for page updates)
 def hashPage(soup):
@@ -556,8 +639,6 @@ def canonicalize(url):
     return urlunparse(parsed_url)
 
 # function to try and get the page, skipping if it fails due to verification or timeout, exits the program if we've run out of links early
-
-
 def getPage(curUrl, bfsQueue, visited, driver):
     try:
         # get the page with selenium, with a 10 second timeout
@@ -583,8 +664,6 @@ def getPage(curUrl, bfsQueue, visited, driver):
 # and the first 10 links on the page, as well as top 10 keywords along with their frequency
 
 # the function to recursively scrape the pages
-
-
 def scrape(curUrl, targetVisited, parentID, bfsQueue, visited, driver, session):
 
     curUrl = canonicalize(curUrl)
