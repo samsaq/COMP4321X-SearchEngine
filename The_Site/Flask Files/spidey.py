@@ -4,7 +4,7 @@ import sqlite3
 import re
 import hashlib
 import sqlalchemy
-from sqlalchemy import create_engine, Column, Integer, Text, ForeignKey
+from sqlalchemy import create_engine, Column, Integer, Text, ForeignKey, func
 from sqlalchemy.orm import relationship, sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm.exc import NoResultFound
@@ -17,6 +17,7 @@ from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service
 from flask import Flask
+from math import log
 
 # creating a web scraper with selenium, beautifulsoup, and sqlite to get X pages from the given root url into a database setup for later searching
 
@@ -71,6 +72,8 @@ class Page(Base):
     size = Column(Integer)
     parent_page_id = Column(Integer, ForeignKey('Page.page_id'))
     hash = Column(Text)
+    title_vector = Column(Text)
+    content_vector = Column(Text)
 
     parent_page = relationship("Page", remote_side=[page_id])
 
@@ -259,35 +262,69 @@ def triggerScraping(seedUrl, targetVisited):
     sessionFactory = makeAlchemy(engine)
 
     # scrape
-    scrapeSession = sessionFactory()
-    scrape(seedUrl, targetVisited, None, bfsQueue, visited, driver, scrapeSession)
-    scrapeSession.commit()
-    scrapeSession.close()
+    session = sessionFactory()
+    scrape(seedUrl, targetVisited, None, bfsQueue, visited, driver, session)
+    session.commit()
 
     # generate the bigrams and trigrams
-    bigramTrigramSession = sessionFactory()
-    pages = bigramTrigramSession.query(Page).all()
+    pages = session.query(Page).all()
     for page in pages:
-        generateBigramsTrigrams(bigramTrigramSession, page.page_id)
-    bigramTrigramSession.commit()
-    bigramTrigramSession.close()
+        generateBigramsTrigrams(session, page.page_id)
+    session.commit()
 
     # precompute the vectors
-    preConstructionSession = sessionFactory()
-    for page in pages:
-        preConstructVectors()
-    preConstructionSession.commit()
-    preConstructionSession.close()
+    preConstructVectors(session, pages)
+    session.commit()
     
-    # close the sessions and driver
+    # close the session and driver
+    session.close()
     driver.close()
 
 # function to take the exisitng database & precalculate the vectors via the TF-IDF algorithm
 # it will do so on a per page basis, and will do so for the term, bigram, and trigram vectors for both the title and content
-def preConstructVectors(session, pageID):
-    # get the terms, bigrams, and trigrams for the page
+def preConstructVectors(session, pages):
+    # get the average title and content length for the pages of the database
+    avgTitleLength = session.query(func.avg(Page.title_length)).scalar()
+    avgContentLength = session.query(func.avg(Page.content_length)).scalar()
     
-    pass
+    for page in pages:
+        titleVector, contentVector = BM25Vector(session, page.page_id, avgTitleLength, avgContentLength)
+        # now to add the vectors to the database
+        page.title_vector = titleVector
+        page.content_vector = contentVector
+
+# a BM25 function to take the given page, and reuturns the title and content vectors for the page
+def BM25Vector(session, pageID, avgTitleLength, avgContentLength):
+    page = session.query(Page).filter(Page.page_id == pageID).first()
+    title_terms = session.query(Term, TitleTermFrequency).filter(Term.term_id == TitleTermFrequency.term_id).filter(TitleTermFrequency.page_id == pageID).all()
+    content_terms = session.query(Term, ContentTermFrequency).filter(Term.term_id == ContentTermFrequency.term_id).filter(ContentTermFrequency.page_id == pageID).all()
+
+    # use the BM25 algorithm to calculate the term vectors for the title and content seperately
+    # variable presets are k1 = 2.5, b = 0.75, delta = 0.25
+    title_vector = {}
+    content_vector = {}
+    for term, term_frequency in title_terms:
+        df = session.query(func.count(TitleTermFrequency.page_id)).filter_by(term_id=term.term_id).scalar()
+        idf = log((session.query(func.count(Page.page_id)).scalar() - df + 0.5) / (df + 0.5))
+
+        # calculate the tf-idf for the term
+        tf_idf = ((2.5 * term_frequency.frequency) / (term_frequency.frequency + 1.5 * (0.25 + 0.75 * (len(page.content) / avgTitleLength)))) * idf
+
+        # append to the title vector
+        title_vector.append(tf_idf)
+
+    for term, term_frequency in content_terms:
+        df = session.query(func.count(ContentTermFrequency.page_id)).filter_by(term_id=term.term_id).scalar()
+        idf = log((session.query(func.count(Page.page_id)).scalar() - df + 0.5) / (df + 0.5))
+
+        # calculate the tf-idf for the term
+        tf_idf = ((2.5 * term_frequency.frequency) / (term_frequency.frequency + 1.5 * (0.25 + 0.75 * (len(page.content) / avgContentLength)))) * idf
+
+        # append to the content vector
+        content_vector.append(tf_idf)
+
+    # return the two vectors
+    return title_vector, content_vector
 
 # Double Check the names used when adding to the database here, they may be off
 # function to generate the bigrams and trigrams for a given page & add them to the database
