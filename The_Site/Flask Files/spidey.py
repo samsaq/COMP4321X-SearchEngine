@@ -6,6 +6,7 @@ import hashlib
 import numpy as np
 import pickle
 from bs4 import BeautifulSoup
+from nltk import ngrams
 from nltk.stem import PorterStemmer
 from collections import deque, Counter
 from urllib.parse import urlparse, urlunparse, urljoin, urlencode, quote, parse_qs
@@ -247,7 +248,11 @@ class PageVectors(db.Model):
     page_id = Column(Integer, ForeignKey('Page.page_id'), primary_key=True)
     title_vector = Column(PickleType, nullable=False)
     content_vector = Column(PickleType, nullable=False)
-    weighted_vector = Column(PickleType, nullable=False)
+    weighted_vector = Column(PickleType, nullable=False) # default no-phrase vector to weight towards titles
+    title_bigram_vector = Column(PickleType, nullable=False)
+    content_bigram_vector = Column(PickleType, nullable=False)
+    title_trigram_vector = Column(PickleType, nullable=False)
+    content_trigram_vector = Column(PickleType, nullable=False)
 
     page = db.relationship("Page")
 
@@ -316,10 +321,10 @@ def triggerScraping(seedUrl, targetVisited):
 def preConstructVectors(session, pages, avgTitleLength, avgContentLength):
     
     for page in pages:
-        titleVector, contentVector = BM25Vector(session, page.page_id, avgTitleLength, avgContentLength)
+        titleVector, contentVector, titleBigramVector, contentBigramVector, titleTrigramVector, contentTrigramVector = BM25Vector(session, page.page_id, avgTitleLength, avgContentLength)
         weightedVector = weightedVector(titleVector, contentVector) # currently using default weights for title and content (0.8, 0.2)
         # now to add the vectors to the database
-        pageVector = PageVectors(page_id=page.page_id, title_vector=pickle.dumps(titleVector), content_vector=pickle.dumps(contentVector), weighted_vector=pickle.dumps(weightedVector))
+        pageVector = PageVectors(page_id=page.page_id, title_vector=pickle.dumps(titleVector), content_vector=pickle.dumps(contentVector), weighted_vector=pickle.dumps(weightedVector), title_bigram_vector=pickle.dumps(titleBigramVector), content_bigram_vector=pickle.dumps(contentBigramVector), title_trigram_vector=pickle.dumps(titleTrigramVector), content_trigram_vector=pickle.dumps(contentTrigramVector))
         session.add(pageVector)
 
 # a BM25 function to take the given page, and reuturns the title and content vectors for the page
@@ -328,16 +333,31 @@ def BM25Vector(session, pageID, avgTitleLength, avgContentLength):
     title_terms = session.query(Term, TitleTermFrequency).filter(Term.term_id == TitleTermFrequency.term_id).filter(TitleTermFrequency.page_id == pageID).all()
     content_terms = session.query(Term, ContentTermFrequency).filter(Term.term_id == ContentTermFrequency.term_id).filter(ContentTermFrequency.page_id == pageID).all()
 
+    # create bigrams and trigrams for the title
+    title_bigrams = list(ngrams(page.title.split(), 2))
+    title_trigrams = list(ngrams(page.title.split(), 3))
+
+    # create bigrams and trigrams for the content
+    content_bigrams = list(ngrams(page.content.split(), 2))
+    content_trigrams = list(ngrams(page.content.split(), 3))
+    title_bigrams_ids, title_trigrams_ids = getBigramsTrigramsIDs(session, title_bigrams, title_trigrams)
+    content_bigrams_ids, content_trigrams_ids = getBigramsTrigramsIDs(session, content_bigrams, content_trigrams)
+    # we have the ids as lists
+
     # use the BM25 algorithm to calculate the term vectors for the title and content seperately
     # variable presets are k1 = 2.5, b = 0.75, delta = 0.25
     title_vector = np.zeros(len(title_terms))
     content_vector = np.zeros(len(content_terms))
+    title_bigram_vector = np.zeros(len(title_bigrams))
+    content_bigram_vector = np.zeros(len(content_bigrams))
+    title_trigram_vector = np.zeros(len(title_trigrams))
+    content_trigram_vector = np.zeros(len(content_trigrams))
     for i, (term, term_frequency) in enumerate(title_terms):
         df = session.query(func.count(TitleTermFrequency.page_id)).filter_by(term_id=term.term_id).scalar()
         idf = log((session.query(func.count(Page.page_id)).scalar() - df + 0.5) / (df + 0.5))
 
         # calculate the tf-idf for the term
-        tf_idf = ((2.5 * term_frequency.frequency) / (term_frequency.frequency + 1.5 * (0.25 + 0.75 * (len(page.content) / avgTitleLength)))) * idf
+        tf_idf = ((2.5 * term_frequency.frequency) / (term_frequency.frequency + 1.5 * (0.25 + 0.75 * (len(page.title) / avgTitleLength)))) * idf
 
         # append to the title vector
         title_vector[i] = tf_idf
@@ -352,11 +372,43 @@ def BM25Vector(session, pageID, avgTitleLength, avgContentLength):
         # append to the content vector
         content_vector[i] = tf_idf
 
-    # return the two vectors as numpy arrays
-    return title_vector, content_vector
+    # iterate through title bigrams and trigrams, and calculate their tf-idf scores
+    for i in range(len(title_bigrams)):
+        tf = session.query(TitleBigramPosition.frequency).filter_by(page_id=pageID, bigram_id=title_bigrams_ids[i]).scalar()
+        # df = number of pages that contain the bigram, so get the number of TitleBigramPosition entries with the bigram_id
+        df = session.query(func.count(TitleBigramPosition.page_id)).filter_by(bigram_id=title_bigrams_ids[i]).scalar()
+        idf = log((session.query(func.count(Page.page_id)).scalar() - df + 0.5) / (df + 0.5))
+        tf_idf = ((2.5 * tf) / (tf + 1.5 * (0.25 + 0.75 * (len(page.title) / avgTitleLength)))) * idf
+        title_bigram_vector[len(title_terms) + i] = tf_idf
+
+    for i in range(len(content_bigrams)):
+        tf = session.query(ContentBigramPosition.frequency).filter_by(page_id=pageID, bigram_id=content_bigrams_ids[i]).scalar()
+        # df = number of pages that contain the bigram, so get the number of ContentBigramPosition entries with the bigram_id
+        df = session.query(func.count(ContentBigramPosition.page_id)).filter_by(bigram_id=content_bigrams_ids[i]).scalar()
+        idf = log((session.query(func.count(Page.page_id)).scalar() - df + 0.5) / (df + 0.5))
+        tf_idf = ((2.5 * tf) / (tf + 1.5 * (0.25 + 0.75 * (len(page.content) / avgContentLength)))) * idf
+        content_bigram_vector[len(content_terms) + i] = tf_idf
+    
+    for i in range(len(title_trigrams)):
+        tf = session.query(TitleTrigramPosition.frequency).filter_by(page_id=pageID, trigram_id=title_trigrams_ids[i]).scalar()
+        # df = number of pages that contain the trigram, so get the number of TitleTrigramPosition entries with the trigram_id
+        df = session.query(func.count(TitleTrigramPosition.page_id)).filter_by(trigram_id=title_trigrams_ids[i]).scalar()
+        idf = log((session.query(func.count(Page.page_id)).scalar() - df + 0.5) / (df + 0.5))
+        tf_idf = ((2.5 * tf) / (tf + 1.5 * (0.25 + 0.75 * (len(page.title) / avgTitleLength)))) * idf
+        title_trigram_vector[len(title_terms) + len(title_bigrams) + i] = tf_idf
+
+    for i in range(len(content_trigrams)):
+        tf = session.query(ContentTrigramPosition.frequency).filter_by(page_id=pageID, trigram_id=content_trigrams_ids[i]).scalar()
+        # df = number of pages that contain the trigram, so get the number of ContentTrigramPosition entries with the trigram_id
+        df = session.query(func.count(ContentTrigramPosition.page_id)).filter_by(trigram_id=content_trigrams_ids[i]).scalar()
+        idf = log((session.query(func.count(Page.page_id)).scalar() - df + 0.5) / (df + 0.5))
+        tf_idf = ((2.5 * tf) / (tf + 1.5 * (0.25 + 0.75 * (len(page.content) / avgContentLength)))) * idf
+        content_trigram_vector[len(content_terms) + len(content_bigrams) + i] = tf_idf
+    # return the all of the vectors as numpy arrays
+    return title_vector, content_vector, title_bigram_vector, content_bigram_vector, title_trigram_vector, content_trigram_vector
 
 # function to get a BM25 vector for a given query (the query has been preprocessesd already for stemming and stopword removal, and is now a list of terms)
-def getBM25QueryVector (session, queryFreq): # queryFreq is a list of tuples of (term, frequency) sorted by frequency
+def getBM25QueryVector (session, queryFreq, queryBigrams, queryTrigrams): # queryFreq is a list of tuples of (term, frequency) sorted by frequency
     # get the database information needed to calculate the BM25 vector
     databaseInfo = session.query(DatabaseInfo).first()
 
@@ -375,7 +427,32 @@ def getBM25QueryVector (session, queryFreq): # queryFreq is a list of tuples of 
         numerator = idf * termFreq * (k1 + 1)
         denominator = termFreq + k1 * (1 - b + b * get_n(term) / databaseInfo.num_docs) + delta
         queryVector[termID] = numerator / denominator
-    return queryVector
+
+    # calculate bigram vector
+    numBigrams = len(queryBigrams)
+    queryBigramsVector = np.zeros(databaseInfo.num_bigrams)
+    for i in range(numBigrams):
+        bigram = queryBigrams[i]
+        bigramFreq = queryBigrams.count(bigram)
+        bigramID = session.query(Bigram.bigram_id).filter_by(bigram=bigram).one().bigram_id
+        idf = get_bm25_idf(bigram)
+        numerator = idf * bigramFreq * (k1 + 1)
+        denominator = bigramFreq + k1 * (1 - b + b * get_n(bigram) / databaseInfo.num_docs) + delta
+        queryBigramsVector[bigramID] = numerator / denominator
+
+    # calculate trigram vector
+    numTrigrams = len(queryTrigrams)
+    queryTrigramsVector = np.zeros(databaseInfo.num_trigrams)
+    for i in range(numTrigrams):
+        trigram = queryTrigrams[i]
+        trigramFreq = queryTrigrams.count(trigram)
+        trigramID = session.query(Trigram.trigram_id).filter_by(trigram=trigram).one().trigram_id
+        idf = get_bm25_idf(trigram)
+        numerator = idf * trigramFreq * (k1 + 1)
+        denominator = trigramFreq + k1 * (1 - b + b * get_n(trigram) / databaseInfo.num_docs) + delta
+        queryTrigramsVector[trigramID] = numerator / denominator
+
+    return queryVector, queryBigramsVector, queryTrigramsVector
 
 # helper function for the above - gets the idf of a given term overall (for both title and content)
 def get_bm25_idf(term):
@@ -410,20 +487,36 @@ def search(session, query, numResults=50):
     queryStems = [ps.stem(token) for token in queryTokens]
     # count frequency of each word, making a list of tuples
     queryFreq = Counter(queryStems).most_common()
+    
+    # get bigrams and trigrams for the query
+    queryBigrams = list(ngrams(queryStems, 2))
+    queryTrigrams = list(ngrams(queryStems, 3))
+    
+    queryBigramsList = [tuple(row) for row in queryBigrams]
+    queryBigramsFreq = Counter(queryBigramsList).most_common()
+    queryTrigramsList = [tuple(row) for row in queryTrigrams]
+    queryTrigramsFreq = Counter(queryTrigramsList).most_common()
+
+    bigramIDsList, trigramIDsList = getBigramsTrigramsIDs(session, queryBigramsFreq, queryTrigramsFreq)
+
     # get the BM25 vector for the query as a numpy array
-    queryVector = getBM25QueryVector(session, queryFreq)
+    queryVector = getBM25QueryVector(session, queryFreq, queryBigrams, queryTrigrams)
+
     # now to use the query vector to search the database with cosine similarity
     # we need to get the numResults most similar pages to the query
 
     # get the database information needed for the search
     databaseInfo = session.query(DatabaseInfo).first()
     numDocs = databaseInfo.num_docs
+    numTerms = databaseInfo.num_terms
 
     # calculate the cosine similarity between the query vector and all document vectors
-    docVectors = np.zeros((numDocs, databaseInfo.num_terms))
+    docVectors = np.zeros((numDocs, numTerms))
     for i in range(numDocs):
         docID = i + 1
-        docVectors[i] = session.query(PageVectors).filter_by(page_id=docID).one().weighted_vector
+        doc = session.query(PageVectors).filter_by(page_id=docID).one()
+        unPickledVector = pickle.loads(doc.weighted_vector)
+        docVectors[i] = unPickledVector
     docSims = cosine_similarity(queryVector.reshape(1, -1), docVectors).flatten()
 
     # sort the document similarities in descending order and get the top numResults
@@ -440,6 +533,26 @@ def search(session, query, numResults=50):
 def cosine_similarity(a, b):
     return dot(a, b) / (norm(a) * norm(b))
 
+# function to get the bigram and trigram IDs for a given query - helper function for search
+# takes in a numpy array of bigrams and trigrams from the ngrams function
+def getBigramsTrigramsIDs(session, bigramsArray, trigramsArray):
+    bigramsIDs = []
+    trigramsIDs = []
+    for i in range(len(bigramsArray)):
+        term1, term2 = bigramsArray[i]
+        term1_id = session.query(Term.term_id).filter_by(term=term1).one().term_id
+        term2_id = session.query(Term.term_id).filter_by(term=term2).one().term_id
+        bigramID = session.query(Bigram).filter_by(term1_id=term1_id, term2_id=term2_id).one().bigram_id
+        bigramsIDs.append(bigramID)
+    for i in range(len(trigramsArray)):
+        term1, term2, term3 = trigramsArray[i]
+        term1_id = session.query(Term.term_id).filter_by(term=term1).one().term_id
+        term2_id = session.query(Term.term_id).filter_by(term=term2).one().term_id
+        term3_id = session.query(Term.term_id).filter_by(term=term3).one().term_id
+        trigramID = session.query(Trigram).filter_by(term1_id=term1_id, term2_id=term2_id, term3_id=term3_id).one().trigram_id
+        trigramsIDs.append(trigramID)
+    return bigramsIDs, trigramsIDs
+
 # Double Check the names used when adding to the database here, they may be off
 # function to generate the bigrams and trigrams for a given page & add them to the database
 def generateBigramsTrigrams(session, pageID):
@@ -452,48 +565,27 @@ def generateBigramsTrigrams(session, pageID):
     # Compute the position lists for the bigrams and trigrams in the content
     content_bigram_positions = {}
     content_trigram_positions = {}
-    for i in range(len(content_result) - 1):
-        term_id1, positions1 = content_result[i]
-        term_id2, positions2 = content_result[i+1]
-        content_bigram_positions[(term_id1, term_id2)] = []
-        for pos1 in positions1.split(','):
-            for pos2 in positions2.split(','):
-                content_bigram_positions[(term_id1, term_id2)].append(int(pos1) + 1)
-                content_bigram_positions[(term_id1, term_id2)].append(int(pos2) + 1)
-        if i < len(content_result) - 2:
-            term_id3, positions3 = content_result[i+2]
-            content_trigram_positions[(term_id1, term_id2, term_id3)] = []
-            for pos1 in positions1.split(','):
-                for pos2 in positions2.split(','):
-                    for pos3 in positions3.split(','):
-                        content_trigram_positions[(term_id1, term_id2, term_id3)].append(int(pos1) + 1)
-                        content_trigram_positions[(term_id1, term_id2, term_id3)].append(int(pos2) + 1)
-                        content_trigram_positions[(term_id1, term_id2, term_id3)].append(int(pos3) + 1)
+    for positions in [pos for _, pos in content_result]:
+        content_bigrams = list(ngrams(positions.split(','), 2))
+        content_trigrams = list(ngrams(positions.split(','), 3))
+        for bigram in content_bigrams:
+            content_bigram_positions[bigram] = [int(pos) + 1 for pos in bigram]
+        for trigram in content_trigrams:
+            content_trigram_positions[trigram] = [int(pos) + 1 for pos in trigram]
 
     # Compute the position lists for the bigrams and trigrams in the title
     title_bigram_positions = {}
     title_trigram_positions = {}
-    for i in range(len(title_result) - 1):
-        term_id1, positions1 = title_result[i]
-        term_id2, positions2 = title_result[i+1]
-        title_bigram_positions[(term_id1, term_id2)] = []
-        for pos1 in positions1.split(','):
-            for pos2 in positions2.split(','):
-                title_bigram_positions[(term_id1, term_id2)].append(int(pos1) + 1)
-                title_bigram_positions[(term_id1, term_id2)].append(int(pos2) + 1)
-        if i < len(title_result) - 2:
-            term_id3, positions3 = title_result[i+2]
-            title_trigram_positions[(term_id1, term_id2, term_id3)] = []
-            for pos1 in positions1.split(','):
-                for pos2 in positions2.split(','):
-                    for pos3 in positions3.split(','):
-                        title_trigram_positions[(term_id1, term_id2, term_id3)].append(int(pos1) + 1)
-                        title_trigram_positions[(term_id1, term_id2, term_id3)].append(int(pos2) + 1)
-                        title_trigram_positions[(term_id1, term_id2, term_id3)].append(int(pos3) + 1)
+    for positions in [pos for _, pos in title_result]:
+        title_bigrams = list(ngrams(positions.split(','), 2))
+        title_trigrams = list(ngrams(positions.split(','), 3))
+        for bigram in title_bigrams:
+            title_bigram_positions[bigram] = [int(pos) + 1 for pos in bigram]
+        for trigram in title_trigrams:
+            title_trigram_positions[trigram] = [int(pos) + 1 for pos in trigram]
 
     # Add the bigrams and trigrams to the database
-    # first making sure the bigrams and trigrams are actually in the database before handling positons & frequencies
-    for bigram, positions in content_bigram_positions.items(): # checking for bigrams in content
+    for bigram in set(list(content_bigram_positions.keys()) + list(title_bigram_positions.keys())):
         term1_id, term2_id = bigram
         # check if the bigram already exists in the database
         existing_bigram = session.query(Bigram).filter_by(term1_id=term1_id, term2_id=term2_id).first()
@@ -503,17 +595,7 @@ def generateBigramsTrigrams(session, pageID):
             session.add(new_bigram)
             session.flush()
 
-    for bigram, positions, in title_bigram_positions.items(): # checking for bigrams in title
-        term1_id, term2_id = bigram
-        # check if the bigram already exists in the database
-        existing_bigram = session.query(Bigram).filter_by(term1_id=term1_id, term2_id=term2_id).first()
-        if not existing_bigram:
-            # create a new bigram and add it to the database
-            new_bigram = Bigram(term1_id=term1_id, term2_id=term2_id)
-            session.add(new_bigram)
-            session.flush()
-
-    for trigram, positions in content_trigram_positions.items(): # checking for trigrams in content
+    for trigram in set(list(content_trigram_positions.keys()) + list(title_trigram_positions.keys())):
         term1_id, term2_id, term3_id = trigram
         # check if the trigram already exists in the database
         existing_trigram = session.query(Trigram).filter_by(term1_id=term1_id, term2_id=term2_id, term3_id=term3_id).first()
@@ -522,61 +604,6 @@ def generateBigramsTrigrams(session, pageID):
             new_trigram = Trigram(term1_id=term1_id, term2_id=term2_id, term3_id=term3_id)
             session.add(new_trigram)
             session.flush()
-    
-    for trigram, positions in title_trigram_positions.items(): # checking for trigrams in title
-        term1_id, term2_id, term3_id = trigram
-        # check if the trigram already exists in the database
-        existing_trigram = session.query(Trigram).filter_by(term1_id=term1_id, term2_id=term2_id, term3_id=term3_id).first()
-        if not existing_trigram:
-            # create a new trigram and add it to the database
-            new_trigram = Trigram(term1_id=term1_id, term2_id=term2_id, term3_id=term3_id)
-            session.add(new_trigram)
-            session.flush()
-
-    # now that we have the bigrams and trigrams in the database, we can add the positions and frequencies to the relevant tables
-    # first the content bigrams
-    for bigram, positions in content_bigram_positions.items():
-        term1_id, term2_id = bigram
-        bigram_id = session.query(Bigram.id).filter_by(term1_id=term1_id, term2_id=term2_id).one().bigram_id
-        
-        # count the number of times the bigram appears in the content
-        frequency = len(positions)
-        # create the object for the content bigram position table
-        new_content_bigram_position = ContentBigramPosition(page_id = pageID, bigram_id = bigram_id, position_list = positions, frequency = frequency)
-        session.add(new_content_bigram_position)
-    
-    # now the title bigrams
-    for bigram, positions in title_bigram_positions.items():
-        term1_id, term2_id = bigram
-        bigram_id = session.query(Bigram.id).filter_by(term1_id=term1_id, term2_id=term2_id).one().bigram_id
-        
-        # count the number of times the bigram appears in the title
-        frequency = len(positions)
-        # create the object for the title bigram position table
-        new_title_bigram_position = TitleBigramPosition(page_id = pageID, bigram_id = bigram_id, position_list = positions, frequency = frequency)
-        session.add(new_title_bigram_position)
-
-    # now the content trigrams
-    for trigram, positions in content_trigram_positions.items():
-        term1_id, term2_id, term3_id = trigram
-        trigram_id = session.query(Trigram.id).filter_by(term1_id=term1_id, term2_id=term2_id, term3_id=term3_id).one().trigram_id
-        
-        # count the number of times the trigram appears in the content
-        frequency = len(positions)
-        # create the object for the content trigram position table
-        new_content_trigram_position = ContentTrigramPosition(page_id = pageID, trigram_id = trigram_id, position_list = positions, frequency = frequency)
-        session.add(new_content_trigram_position)
-    
-    # now the title trigrams
-    for trigram, positions in title_trigram_positions.items():
-        term1_id, term2_id, term3_id = trigram
-        trigram_id = session.query(Trigram.id).filter_by(term1_id=term1_id, term2_id=term2_id, term3_id=term3_id).one().trigram_id
-        
-        # count the number of times the trigram appears in the title
-        frequency = len(positions)
-        # create the object for the title trigram position table
-        new_title_trigram_position = TitleTrigramPosition(page_id = pageID, trigram_id = trigram_id, position_list = positions, frequency = frequency)
-        session.add(new_title_trigram_position)
 
     # session closed outside for clarity
 
