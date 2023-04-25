@@ -4,9 +4,14 @@
 	import "@skeletonlabs/skeleton/styles/all.css";
 	import "../app.postcss";
 
-	import { AppShell, AppBar } from "@skeletonlabs/skeleton";
-	import PixelBackground from "../lib/PixelBackground.svelte";
+	import { AppShell, Drawer } from "@skeletonlabs/skeleton";
+	import HistoryDrawerNav from "$lib/HistoryDrawerNav.svelte";
 </script>
+
+
+<Drawer>
+	<HistoryDrawerNav />
+</Drawer>
 
 <!-- App Shell -->
 <AppShell>

@@ -10,6 +10,7 @@
         "rgb(76, 175, 80)",
         "rgb(33, 150, 243)",
         "rgb(156, 39, 176)",
+        "rgb(255, 255, 255)",
     ];
 
     const darkColors = [
@@ -25,7 +26,7 @@
     let columns = 0,
         rows = 0,
         count = -1,
-        curBackgroundColor = "rgb(20, 20, 20)",
+        curBackgroundColor = "rgb(255, 255, 255)",
         curIndexNum: number,
         curIndexMid: number,
         interval: NodeJS.Timer,
@@ -116,11 +117,7 @@
 
 <style>
     .componentBody {
-        background-color: rgb(
-            20,
-            20,
-            20
-        ); /* this is the starting background color of the entire page */
+        background-color: rgb(255, 255, 255); /* this is the starting background color of the entire page */
         position: absolute; /**We don't want to interfere with the positioning of other elements*/
         top: 0;
         left: 0;
