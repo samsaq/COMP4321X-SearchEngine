@@ -10,7 +10,7 @@ from nltk import ngrams
 from nltk.stem import PorterStemmer
 from collections import deque, Counter
 from urllib.parse import urlparse, urlunparse, urljoin, urlencode, quote, parse_qs
-import requests
+import requests, sqlite3
 from spideyTest import outputDatabase
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
@@ -18,14 +18,14 @@ from selenium.webdriver.chrome.service import Service
 from flask import Flask, Response, abort, jsonify, request
 from math import log
 from flask_sqlalchemy import SQLAlchemy
-from flask_sqlalchemy import Column, Integer, Text, ForeignKey, func, PickleType
+from flask_sqlalchemy import Column, Integer, Text, ForeignKey, func, PickleType, NoResultFound
 from numpy import dot
 from numpy.linalg import norm
 
 # creating a web scraper with selenium, beautifulsoup, and sqlite to get X pages from the given root url into a database setup for later searching
 
 debug = True
-scrapeRunning = False
+scrapeRunning = False # does this work when stateless?
 
 if (debug):
     os.chdir('Spidey')
@@ -272,9 +272,9 @@ class DatabaseInfo(db.Model):
     avg_content_length = Column(Integer)
 
 # function for API call to remake the database based off of the given parameters
-@app.route('/api/newScrape/<path:seedUrl>/<int:targetVisited>/', methods=['POST'])
+@app.route('/api/triggerScraping/<path:seedUrl>/<int:targetVisited>/', methods=['POST'])
 def triggerScraping(seedUrl, targetVisited):
-    if scrapeRunning:
+    if scrapeRunning: # may not work due to statelessness of flask DOUBLE CHECK
         # if a scrape is already running, return the request with an error that the scrape is already running
         return jsonify({'error': 'scrape already running'}), 400
 
@@ -344,10 +344,9 @@ def triggerScraping(seedUrl, targetVisited):
 # function to take the exisitng database & precalculate the vectors via the TF-IDF algorithm
 # it will do so on a per page basis, and will do so for the term, bigram, and trigram vectors for both the title and content
 def preConstructVectors(session, pages, avgTitleLength, avgContentLength):
-    
     for page in pages:
         titleVector, contentVector, titleBigramVector, contentBigramVector, titleTrigramVector, contentTrigramVector = BM25Vector(session, page.page_id, avgTitleLength, avgContentLength)
-        weightedVector = weightedVector(titleVector, contentVector) # currently using default weights for title and content (0.8, 0.2)
+        weightedVector = getWeightedVector(titleVector, contentVector) # currently using default weights for title and content (0.8, 0.2)
         # now to add the vectors to the database
         pageVector = PageVectors(page_id=page.page_id, title_vector=pickle.dumps(titleVector), content_vector=pickle.dumps(contentVector), weighted_vector=pickle.dumps(weightedVector), title_bigram_vector=pickle.dumps(titleBigramVector), content_bigram_vector=pickle.dumps(contentBigramVector), title_trigram_vector=pickle.dumps(titleTrigramVector), content_trigram_vector=pickle.dumps(contentTrigramVector))
         session.add(pageVector)
@@ -496,7 +495,7 @@ def get_n(term):
 # function to create a weighted composite vector with title and content vectors
 def getWeightedVector(titleVector, contentVector, titleWeight=0.8, contentWeight=0.2):
     # Take a weighted average of the title and body vectors to create a composite vector
-    weightedVector = titleWeight * titleVector + contentWeight * contentVector
+    weightedVector = (titleWeight * titleVector) + (contentWeight * contentVector)
     
     # Return the weighted composite vector
     return weightedVector
@@ -505,6 +504,11 @@ def getWeightedVector(titleVector, contentVector, titleWeight=0.8, contentWeight
 @app.route('/api/search/<query>/', defaults={'numResults': 50}) # alt route to allow for default number of results
 @app.route('/api/search/<query>/<int:numResults>/')
 def search(query, numResults):
+
+    # check that the query is not empty and not just whitespace
+    if query == None or query.isspace():
+        return jsonify({'status': 'error', 'message': 'Empty query'}), 400
+
     session = db.session # double check if this is the correct session
     # preprocess the query string for the search
     queryTokens = re.findall(r'\b\w+\b', query.lower())
@@ -513,7 +517,7 @@ def search(query, numResults):
     # stem the query
     ps = PorterStemmer()
     queryStems = [ps.stem(token) for token in queryTokens]
-    # count frequency of each word, making a list of tuples
+    # count frequency of each word, making a list of tuples (sorted by frequency)
     queryFreq = Counter(queryStems).most_common()
     
     # get bigrams and trigrams for the query
@@ -527,11 +531,36 @@ def search(query, numResults):
 
     bigramIDsList, trigramIDsList = getBigramsTrigramsIDs(session, queryBigramsFreq, queryTrigramsFreq)
 
+    # get an array of the words in the query to iterate through
+    searchPhrases = extractPhrases(query)
+    # check that the phrases are not too long & do not contain other phrases
+    for phrase in searchPhrases:
+        if len(phrase.split() > 3):
+            return jsonify({'status': 'error', 'message': f'Phrase: {phrase} too long please reduce to 3 words or less'}), 400
+        for otherPhrase in searchPhrases:
+            if phrase != otherPhrase and phrase in otherPhrase:
+                return jsonify({'status': 'error', 'message': f'Phrase: {phrase} is nested within another phrase: {otherPhrase}'}), 400
+
+    # for each phrase in the query, get the phraseID and add it to the processedSearchPhrases list (phraseID is the trigramID if the phrase is a trigram, bigramID if a bigram, and termID if a unigram)
+    # processedSearchPhrases is a list of tuples (phraseID, phrase, phraseSize)
+    processedSearchPhrases = []
+    for phrase in searchPhrases:
+        phraseSize = len(phrase.split())
+        try:
+            if phraseSize == 3:
+                phraseID = session.query(Trigram.trigram_id).filter_by(trigram=phrase).one().trigram_id
+            elif phraseSize == 2:
+                phraseID = session.query(Bigram.bigram_id).filter_by(bigram=phrase).one().bigram_id
+            else:
+                phraseID = session.query(Term.term_id).filter_by(term=phrase).one().term_id
+        except NoResultFound:
+            phraseID = None
+
+        processedSearchPhrases.append((phraseID, phrase, phraseSize))
+        
+
     # get the BM25 vector for the query as a numpy array
     queryVector = getBM25QueryVector(session, queryFreq, queryBigrams, queryTrigrams)
-
-    # now to use the query vector to search the database with cosine similarity
-    # we need to get the numResults most similar pages to the query
 
     # get the database information needed for the search
     databaseInfo = session.query(DatabaseInfo).first()
@@ -540,26 +569,114 @@ def search(query, numResults):
 
     # calculate the cosine similarity between the query vector and all document vectors
     docVectors = np.zeros((numDocs, numTerms))
+    docSims = []
     for i in range(numDocs):
         docID = i + 1
         doc = session.query(PageVectors).filter_by(page_id=docID).one()
         unPickledVector = pickle.loads(doc.weighted_vector)
         docVectors[i] = unPickledVector
-    docSims = cosine_similarity(queryVector.reshape(1, -1), docVectors).flatten()
+        docSims.append((docID,  cosineSimilarity(queryVector.reshape(1, -1), unPickledVector.reshape(1, -1)).flatten()[0]))
+
+        # now to check phrases and do weighting for matches within the document
+        # modifiers for title and content weighting is handled with the getWeightedVector function and is already done
+        # check the processedSearchPhrases against the bigrams, trigrams, and terms of the document & give it a detraction if it doesn't have a match
+        # use the phraseSize to determine which table to check
+
+        # get list of bigrams, trigrams, and terms for the document
+
+        # getting terms
+        titleTerms = session.query(Term.term).join(TitleTermFrequency).filter(TitleTermFrequency.page_id == docID).all()
+        contentTerms = session.query(Term.term).join(ContentTermFrequency).filter(ContentTermFrequency.page_id == docID).all()
+        # Combine the lists and remove duplicates
+        allTerms = list(set(titleTerms + contentTerms))
+
+        # getting bigrams
+        titleBigrams = session.query(Bigram.bigram).join(TitleBigramPosition).filter(TitleBigramPosition.page_id == docID).all()
+        contentBigrams = session.query(Bigram.bigram).join(ContentBigramPosition).filter(ContentBigramPosition.page_id == docID).all()
+        # Combine the lists and remove duplicates
+        allBigrams = list(set(titleBigrams + contentBigrams))
+
+        # getting trigrams
+        titleTrigrams = session.query(Trigram.trigram).join(TitleTrigramPosition).filter(TitleTrigramPosition.page_id == docID).all()
+        contentTrigrams = session.query(Trigram.trigram).join(ContentTrigramPosition).filter(ContentTrigramPosition.page_id == docID).all()
+        # Combine the lists and remove duplicates
+        allTrigrams = list(set(titleTrigrams + contentTrigrams))
+
+        for phraseID, phrase, phraseSize in processedSearchPhrases:
+            if phraseID is not None:
+                if phraseSize == 3:
+                    if phrase in allTrigrams:
+                        docSims[i] *= 1.1
+                    else:
+                        docSims[i] *= 0.9
+                elif phraseSize == 2:
+                    if phrase in allBigrams:
+                        docSims[i] += 1.05
+                    else:
+                        docSims[i] -= 0.95
+                else:
+                    if phrase in allTerms:
+                        docSims[i] += 1.025
+                    else:
+                        docSims[i] -= 0.975
+
+    # limit the values to be within the range of -1 and 1
+    docSims = np.clip(docSims, -1, 1)
+        
 
     # sort the document similarities in descending order and get the top numResults
-    topDocIDs = np.argsort(docSims)[::-1][:numResults]
-    topDocSims = docSims[topDocIDs]
-    topPages = []
-    for i in range(numResults):
-        docID = topDocIDs[i] + 1
-        page = session.query(Page).filter_by(id=docID).one()
-        topPages.append((page.title, page.url, topDocSims[i]))
+    sortedSims = sorted(docSims, key=lambda x: x[1], reverse=True)
+    topResults = sortedSims[:numResults]
 
-    return topPages
+    # convert the top results to JSON and return it
+    return jsonify(convertTopResultsToJSON(topResults)), 200
 
-def cosine_similarity(a, b):
+def cosineSimilarity(a, b):
     return dot(a, b) / (norm(a) * norm(b))
+
+# get the demarcated phrases from the query (marked by double quotes)
+def extractPhrases(query):
+    # Use regular expression to extract phrases enclosed in double quotes
+    pattern = r'"([^"]*)"'
+    matches = re.findall(pattern, query)
+    
+    # Check if any nested phrases exist and extract them recursively
+    nested_matches = []
+    for match in matches:
+        nested_matches.extend(extractPhrases(match))
+    
+    # Return the extracted phrases
+    return matches + nested_matches
+
+# take the top results from the search and convert them to JSON
+# use the id to get the data
+# we need the title, url, last modified date, top 10 keywords and their frequencies, the first 10 child links, and page content
+def convertTopResultsToJSON(topResults):
+    session = db.session
+    resultJSONs = []
+    # get the data needed for the JSON
+    for docID, cosSim in topResults:
+        page = session.query(Page).filter_by(page_id=docID).one()
+        # get the top 10 keywords and their frequencies
+        topKeywords = session.query(Term.term, ContentTermFrequency.frequency).join(ContentTermFrequency).filter(ContentTermFrequency.page_id == docID).order_by(ContentTermFrequency.frequency.desc()).limit(10).all()
+        # get the first 10 child links
+        childLinks = session.query(ChildLink).filter_by(page_id=docID).limit(10).all()
+        lastModified = session.query(Page.last_modified).filter_by(page_id=docID).one()
+
+        # convert the data to JSON
+        pageJSON = {
+            "title": page.title,
+            "url": page.url,
+            "lastModified": lastModified,
+            "topKeywords": topKeywords,
+            "childLinks": childLinks,
+            "content": page.content
+        }
+
+        # add the JSON to the list of JSONs
+        resultJSONs.append(pageJSON)
+
+    return resultJSONs
 
 # function to get the bigram and trigram IDs for a given query - helper function for search
 # takes in a numpy array of bigrams and trigrams from the ngrams function
