@@ -272,7 +272,7 @@ class DatabaseInfo(db.Model):
     avg_content_length = Column(Integer)
 
 # function for API call to remake the database based off of the given parameters
-@app.route('/api/newScrape/<path:seedUrl>/<int:targetVisited>/')
+@app.route('/api/newScrape/<path:seedUrl>/<int:targetVisited>/', methods=['POST'])
 def triggerScraping(seedUrl, targetVisited):
     if scrapeRunning:
         # if a scrape is already running, return the request with an error that the scrape is already running
@@ -502,7 +502,10 @@ def getWeightedVector(titleVector, contentVector, titleWeight=0.8, contentWeight
     return weightedVector
 
 # function to search based off of the given query - currently has no phrase search
-def search(session, query, numResults=50):
+@app.route('/api/search/<query>/', defaults={'numResults': 50}) # alt route to allow for default number of results
+@app.route('/api/search/<query>/<int:numResults>/')
+def search(query, numResults):
+    session = db.session # double check if this is the correct session
     # preprocess the query string for the search
     queryTokens = re.findall(r'\b\w+\b', query.lower())
     # remove stopwords from the query
