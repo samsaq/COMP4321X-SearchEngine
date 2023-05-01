@@ -7,6 +7,8 @@
     let searchHistoryArray: string[] = [];
     let unSubSearchHistory: () => void;
 
+    //when the user clicks on a search history item, set the search query to that item
+    //we'll have the search display component listening to the search query in the store to react
     function setSearchQuery(newQuery: string): (event: MouseEvent) => void {
         return (event: MouseEvent) => {
             searchQuery.set(newQuery);
@@ -14,6 +16,7 @@
         };
     }
 
+    //setup the needed listeners to the store
     onMount(() => {
         unSubSearchHistory = searchHistory.subscribe((arr) => {
             searchHistoryLength = arr.length;

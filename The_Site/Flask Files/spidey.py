@@ -1,6 +1,6 @@
+from ssl import SSLError
 import sys
 import os
-import sqlite3
 import re
 import hashlib
 import numpy as np
@@ -10,11 +10,12 @@ from nltk import ngrams
 from nltk.stem import PorterStemmer
 from collections import deque, Counter
 from urllib.parse import urlparse, urlunparse, urljoin, urlencode, quote, parse_qs
+import requests
 from spideyTest import outputDatabase
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service
-from flask import Flask
+from flask import Flask, Response, abort, jsonify, request
 from math import log
 from flask_sqlalchemy import SQLAlchemy
 from flask_sqlalchemy import Column, Integer, Text, ForeignKey, func, PickleType
@@ -24,6 +25,7 @@ from numpy.linalg import norm
 # creating a web scraper with selenium, beautifulsoup, and sqlite to get X pages from the given root url into a database setup for later searching
 
 debug = True
+scrapeRunning = False
 
 if (debug):
     os.chdir('Spidey')
@@ -270,7 +272,29 @@ class DatabaseInfo(db.Model):
     avg_content_length = Column(Integer)
 
 # function for API call to remake the database based off of the given parameters
+@app.route('/api/newScrape/<path:seedUrl>/<int:targetVisited>/')
 def triggerScraping(seedUrl, targetVisited):
+    if scrapeRunning:
+        # if a scrape is already running, return the request with an error that the scrape is already running
+        return jsonify({'error': 'scrape already running'}), 400
+
+    # Check the parameters
+    if targetVisited <= 1:
+        return jsonify({'status': 'error', 'message': 'Too little pages - targetVisited must be greater than 1'}), 400
+    if targetVisited > 1000:
+        return jsonify({'status': 'error', 'message': 'Too many pages - targetVisited must be less than or equal to 1000'}), 400
+
+    # check the url
+    try:
+        response = requests.get(seedUrl)
+        response.raise_for_status()
+    except SSLError:
+        return jsonify({'status': 'error', 'message': f"Invalid SSL/TLS certificate for URL: {seedUrl}"}), 400
+    except (requests.exceptions.RequestException, requests.exceptions.HTTPError):
+        # Return a 400 Bad Request error if the URL is invalid or the request fails
+        return jsonify({'status': 'error', 'message': f"Invalid URL: {seedUrl}"}), 400
+
+    scrapeRunning = True
     visited = set()
     bfsQueue = deque()
     driver = webdriver.Chrome(service=service, options=options)
@@ -312,6 +336,7 @@ def triggerScraping(seedUrl, targetVisited):
     session.add(databaseInfo)
 
     # close the session and driver
+    scrapeRunning = False
     session.commit()
     session.close()
     driver.close()
