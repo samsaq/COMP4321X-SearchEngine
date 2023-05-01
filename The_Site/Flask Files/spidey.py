@@ -744,8 +744,6 @@ def cosineSimilarity(a, b):
     return dot(a, b) / (norm(a) * norm(b))
 
 # get the demarcated phrases from the query (marked by double quotes)
-
-
 def extractPhrases(query):
     # Use regular expression to extract phrases enclosed in double quotes
     pattern = r'"([^"]*)"'
@@ -762,8 +760,6 @@ def extractPhrases(query):
 # take the top results from the search and convert them to JSON
 # use the id to get the data
 # we need the title, url, last modified date, top 10 keywords and their frequencies, the first 10 child links, and page content
-
-
 def convertTopResultsToJSON(topResults):
     session = db.session
     resultJSONs = []
