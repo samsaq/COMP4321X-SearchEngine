@@ -4,6 +4,7 @@
     import { AppBar, ProgressRadial, drawerStore } from "@skeletonlabs/skeleton";
     import type { DrawerSettings } from "@skeletonlabs/skeleton";
     import { searchHistory, searchQuery } from "../../historyStore";
+    import 'iconify-icon';
 
     let curQuery: string = "";
     let waitingForSearch: boolean = true; // to trigger the loading animation
@@ -24,7 +25,7 @@
     <AppBar background = "variant-ghost-error">
         <svelte:fragment slot="lead">
             <a href="/">
-                <img src="/search.svg" alt="Home" />
+                <iconify-icon icon="ic:outline-home" height=2rem width=2rem style="color: #000000"></iconify-icon>
             </a>
         </svelte:fragment>
         <svelte:fragment slot= "trail">
