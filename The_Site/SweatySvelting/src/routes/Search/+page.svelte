@@ -21,7 +21,7 @@
     const particlesConfig = {
         particles: {
             number: {
-                value: 30,
+                value: 45,
             },
             color: {
                 value: "#607d8b",
@@ -62,17 +62,6 @@
         ParticlesComponent = particlesModule.default;
     });
 
-    onMount(() => {
-        const btn = document.querySelector(".btn"),
-            input = document.querySelector(".input");
-        if (btn && input) {
-            btn.addEventListener("click", () => {
-                btn.classList.toggle("close");
-                input.classList.toggle("inclicked");
-            });
-        }
-    });
-
     let curQuery: string = "";
     let waitingForSearch: boolean = true; // to trigger the loading animation
 
@@ -98,6 +87,7 @@
                 //if the query is a new one
                 updateSearchQuery(curQuery);
                 appendSearchQuery(curQuery);
+                animateSearchHero();
                 //now to send and process the query
             } // if the query has already been done, send a modal to the user
             else {
@@ -109,6 +99,46 @@
                 curQuery = "";
                 modalStore.trigger(oldQuery);
             }
+        }
+    }
+
+    let heroAnimating: boolean = false;
+
+    // function to toggle the animation class for the search hero text
+    function animateSearchHero() {
+        heroAnimating = true;
+    }
+
+    function handleHeroAnimEndHandler(event: any) {
+        //if animate-hero-squish is a class of the element, move the search box (as the hero text is now hidden)
+        if (event.target.classList.contains("animate-hero-squish")) {
+            const searchBox = document.querySelector(".search-box");
+            //transform the search box to the top of the page
+            if (searchBox) {
+                (searchBox as HTMLElement).style.transform =
+                    "translateY(-50vh)";
+            }
+        }
+    }
+
+    function handleHeroAnimStartHandler(event: any) {
+        const searchInput = document.getElementById("search-input");
+        const searchHero = document.querySelector(".search-hero");
+        if (searchHero) {
+            if (searchHero.classList.contains("animate-hero-squish")) {
+                //also, set the flex to 1 of the seach-input so it stops shrinking now that we have a query
+                if (searchInput) {
+                    (searchInput as HTMLElement).style.flex = "1";
+                }
+            }
+        }
+    }
+
+    function handleSearchBoxBlur(event: any) {
+        //if the animate-hero-squish doesn't exist, then clear curQuery on blur
+        //else, do nothing
+        if (!document.querySelector(".animate-hero-squish")) {
+            curQuery = "";
         }
     }
 </script>
@@ -144,10 +174,29 @@
     </div>
 
     <div id="search-content-container">
-        <div class="search-hero flex flex-col border-l-4 border-black p-4">
-            <h2 class="search-step">Let's</h2>
-            <h2 class="search-step">Search for</h2>
-            <h2 class="search-step"><span class="fancy">Connections</span></h2>
+        <div
+            class="search-hero overflow-hidden flex flex-col border-l-4 border-black p-4 {heroAnimating
+                ? 'animate-hero-squish'
+                : ''}"
+            on:animationend={handleHeroAnimEndHandler}
+            on:animationstart={handleHeroAnimStartHandler}
+        >
+            <!--the class is toggled by the animateSearchHero function, for some reason toggling the class doesn't work via JS, but this does-->
+            <h2
+                class="search-step {heroAnimating ? 'animate-search-step' : ''}"
+            >
+                Let's
+            </h2>
+            <h2
+                class="search-step {heroAnimating ? 'animate-search-step' : ''}"
+            >
+                Search for
+            </h2>
+            <h2
+                class="search-step {heroAnimating ? 'animate-search-step' : ''}"
+            >
+                <span class="fancy">Connections</span>
+            </h2>
         </div>
 
         <form
@@ -168,13 +217,34 @@
                 id="search-input"
                 placeholder="Search"
                 bind:value={curQuery}
-                on:blur= {() => curQuery = ""}
-            /> <!--on:blur triggers when focus is lost, clearing the search text-->
+                on:blur={handleSearchBoxBlur}
+            />
+            <!--on:blur triggers when focus is lost, clearing the search text-->
         </form>
     </div>
 </main>
 
 <style lang="scss">
+    @keyframes stepAnimation {
+        0% {
+            transform: translateX(0);
+        }
+        100% {
+            transform: translateX(-200%);
+        }
+    }
+
+    @keyframes heroSquishAnimation {
+        0% {
+            transform: scaleY(1);
+            opacity: 1;
+        }
+        100% {
+            transform: scaleY(0);
+            opacity: 0;
+        }
+    }
+
     main {
         background-color: rgb(var(--color-error-500));
         margin: 0px;
@@ -198,6 +268,19 @@
             font-family: "Lobster", cursive;
             color: rgb(var(--color-primary-500));
         }
+
+        .animate-search-step {
+            animation: stepAnimation 2s ease-in-out;
+        }
+    }
+
+    .animate-search-step {
+        animation: stepAnimation forwards 2s ease-in-out;
+    }
+
+    .animate-hero-squish {
+        animation: heroSquishAnimation forwards 1s ease-in-out;
+        animation-delay: 2s; //should be the same as the animation duration of the search steps, since the animation is triggered after the steps are done
     }
 
     .search-box {
@@ -211,6 +294,7 @@
         display: flex;
         align-items: center;
         justify-content: center;
+        transition: all 1s ease-in-out;
     }
 
     .search-icon {
@@ -221,8 +305,10 @@
         transition: all 0.3s ease-in-out;
 
         &:focus {
+            //we don't want any outlines since we already have one
             box-shadow: none;
-            flex: 1;
+            outline: none;
+            flex: 1; //used to expand the input on click, and shrink back on blur
         }
     }
 

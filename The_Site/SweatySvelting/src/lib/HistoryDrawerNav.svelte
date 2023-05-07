@@ -29,18 +29,37 @@
     });
 </script>
 
-{#if searchHistoryLength <= 0}
-    <span>You haven't searched anything yet</span>
-{:else}
-    {#each searchHistoryArray as Query}
-        <button
-            class="btn variant-filled-primary"
-            on:click={setSearchQuery(Query)}
-        >
-            <span>{searchQuery}</span>
-        </button>
-    {/each}
-{/if}
+<div class="flex flex-col justify-start items-center drawerContainer">
+    {#if searchHistoryLength <= 0}
+        <span class="text-l py-4 underline-offset-4 underline">You haven't searched anything yet</span>
+    {:else}
+        <span class="text-xl py-4 underline-offset-4 underline search-history-hero">Search History</span>
+        <nav class="list-nav">
+            <ul>
+                {#each searchHistoryArray as Query}
+                    <li class= "flex justify-center py-2">
+                        <button
+                            class="btn variant-form-material"
+                            on:click={setSearchQuery(Query)}>{Query}</button
+                        >
+                    </li>
+                {/each}
+            </ul>
+        </nav>
+    {/if}
+</div>
 
 <style lang="postcss">
+
+    .drawerContainer {
+        font-family: "Rubik", sans-serif;
+    }
+
+    .search-history-hero{
+        font-family: "Lobster", cursive;
+        font-size: 3rem;
+        padding-bottom: 2rem;
+        text-decoration: rgb(var(--color-primary-500)) underline;
+    }
+
 </style>

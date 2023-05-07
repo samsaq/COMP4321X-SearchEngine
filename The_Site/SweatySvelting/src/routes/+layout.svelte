@@ -8,9 +8,9 @@
 	import HistoryDrawerNav from "$lib/HistoryDrawerNav.svelte";
 </script>
 
-<Modal/>
+<Modal rounded="rounded-none" buttonNeutral="rounded-none border-solid"/>
 
-<Drawer>
+<Drawer width="w-1/4" rounded="rounded-none">
 	<HistoryDrawerNav />
 </Drawer>
 
