@@ -4,10 +4,11 @@
 	import "@skeletonlabs/skeleton/styles/all.css";
 	import "../app.postcss";
 
-	import { AppShell, Drawer } from "@skeletonlabs/skeleton";
+	import { AppShell, Drawer, Modal } from "@skeletonlabs/skeleton";
 	import HistoryDrawerNav from "$lib/HistoryDrawerNav.svelte";
 </script>
 
+<Modal/>
 
 <Drawer>
 	<HistoryDrawerNav />
