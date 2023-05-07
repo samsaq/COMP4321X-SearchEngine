@@ -104,7 +104,7 @@
     </div>
 
     <div id="search-content-container">
-        <div class= "search-hero flex flex-col border-l-4 border-black p-4">
+        <div class= "search-hero flex flex-col border-l-4 border-black p-4 ">
             <h2 class="search-step">Let's</h2>
             <h2 class="search-step">Search for</h2>
             <h2 class="search-step"><span class="fancy">Connections</span></h2>
@@ -131,13 +131,13 @@
     .search-step {
         font-family: "Rubik";
         font-size: 8vw;
-        margin-top: .75rem;
-        margin-bottom: .75rem;
+        line-height: 8vw;
 
         .fancy {
             font-family: "Lobster", cursive;
             color: rgb(var(--color-primary-500));
         }
+
     }
 
     #search-content-container {
