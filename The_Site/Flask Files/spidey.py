@@ -737,7 +737,7 @@ def search(query, numResults):
     topResults = sortedSims[:numResults]
 
     # convert the top results to JSON and return it
-    return jsonify(convertTopResultsToJSON(topResults)), 200
+    return jsonify({"pages": convertTopResultsToJSON(topResults)}), 200
 
 
 def cosineSimilarity(a, b):

@@ -15,6 +15,7 @@
     import type { Engine } from "tsparticles-engine";
     import type svelteParticles from "svelte-particles";
     import { loadFull } from "tsparticles";
+    import ResultAccordions from "$lib/ResultAccordions.svelte";
 
     let ParticlesComponent: any;
 
@@ -103,6 +104,7 @@
     }
 
     let heroAnimating: boolean = false;
+    let resultsBroughtUp: boolean = false;
 
     // function to toggle the animation class for the search hero text
     function animateSearchHero() {
@@ -115,8 +117,8 @@
             const searchBox = document.querySelector(".search-box");
             //transform the search box to the top of the page
             if (searchBox) {
-                (searchBox as HTMLElement).style.transform =
-                    "translateY(-50vh)";
+                (searchBox as HTMLElement).style.transform = "translateY(-60vh)";
+                resultsBroughtUp = true;
             }
         }
     }
@@ -141,6 +143,73 @@
             curQuery = "";
         }
     }
+
+    const dummyJSON= {
+  "pages": [
+    {
+      "title": "Department of Computer Science and Engineering - HKUST",
+      "url": "https://cse.hkust.edu.hk/",
+      "lastModified": "Tue, 04 Apr 2023 15:03:31 GMT",
+      "topKeywords": {
+        "research": 14,
+        "hkust": 12,
+        "learn": 12,
+        "postgradu": 10,
+        "2023": 9
+      },
+      "childLinks": [
+        "https://hkust.edu.hk/news",
+        "https://hkust.edu.hk/academics/list",
+        "https://hkust.edu.hk/lifehkust",
+        "https://library.hkust.edu.hk/",
+        "https://hkust.edu.hk/visit"
+      ],
+      "content": "https://hkustcareers.hkust.edu.hk/\nhttps://facultyprofiles.hkust.edu.hk/\nhttps://hkust.edu.hk/about\nhttps://seng.hkust.edu.hk/\nhttps://hkust.edu.hk/"
+    },
+    {
+      "title": "News | The Hong Kong University of Science and Technology",
+      "url": "https://hkust.edu.hk/news",
+      "lastModified": "Tue, 04 Apr 2023 15:03:32 GMT",
+      "topKeywords": {
+        "hkust": 26,
+        "school": 18,
+        "scienc": 15,
+        "student": 15,
+        "research": 15
+      },
+      "childLinks": [
+        "https://hkust-gz.edu.cn/",
+        "https://shaw-auditorium.hkust.edu.hk/",
+        "https://calendar.ust.hk",
+        "https://giving.hkust.edu.hk/en/index.php",
+        "https://alum.hkust.edu.hk/home"
+      ],
+      "content": "https://hkustcareers.ust.hk/\nhttps://hkust.edu.hk/stu_intranet/\nhttps://my-ai.ust.hk\nhttps://hkust.edu.hk/\nhttps://science.ust.hk/"
+    },
+    {
+      "title": "Academic Departments | The Hong Kong University of Science and Technology",
+      "url": "https://hkust.edu.hk/academics/list",
+      "lastModified": "Tue, 04 Apr 2023 15:03:34 GMT",
+      "topKeywords": {
+        "center": 102,
+        "research": 70,
+        "institut": 45,
+        "hkust": 41,
+        "depart": 40
+      },
+      "childLinks": [
+        "https://hkust-gz.edu.cn/",
+        "https://shaw-auditorium.hkust.edu.hk/",
+        "https://calendar.ust.hk",
+        "https://giving.hkust.edu.hk/en/index.php",
+        "https://alum.hkust.edu.hk/home"
+      ],
+      "content": "https://hkustcareers.ust.hk/\nhttps://hkust.edu.hk/stu_intranet/\nhttps://my-ai.ust.hk\nhttps://hkust.edu.hk/\nhttps://science.ust.hk/"
+    }
+  ]
+}
+
+
 </script>
 
 <main>
@@ -222,6 +291,9 @@
             <!--on:blur triggers when focus is lost, clearing the search text-->
         </form>
     </div>
+    <div class="resultsHolder backdrop-blur-sm {heroAnimating ? 'broughtUp' : ''}">
+        <ResultAccordions resultsJSON={JSON.stringify(dummyJSON.pages)} />
+    </div>
 </main>
 
 <style lang="scss">
@@ -251,6 +323,25 @@
         height: 100vh;
         width: 100vw;
         overflow: hidden;
+    }
+
+    .resultsHolder {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, 75%);
+        width: 60vw;
+        height: 75vh;
+        border-width: 4px;
+        border-color: black;
+        border-style: solid;
+
+        &.broughtUp{
+            transform: translate(-50%, -35%);
+            transition: all 2s ease-in-out;
+            transition-delay: 3s;
+        }
+
     }
 
     #particles-container {
