@@ -4,12 +4,13 @@
 	import "@skeletonlabs/skeleton/styles/all.css";
 	import "../app.postcss";
 
-	import { AppShell, Drawer } from "@skeletonlabs/skeleton";
+	import { AppShell, Drawer, Modal } from "@skeletonlabs/skeleton";
 	import HistoryDrawerNav from "$lib/HistoryDrawerNav.svelte";
 </script>
 
+<Modal rounded="rounded-none" buttonNeutral="rounded-none border-solid"/>
 
-<Drawer>
+<Drawer width="w-1/4" rounded="rounded-none">
 	<HistoryDrawerNav />
 </Drawer>
 
