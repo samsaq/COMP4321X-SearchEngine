@@ -70,7 +70,7 @@
 
 </script>
 
-<div class="accordionsContainer flex flex-col">
+<div class="accordionsContainer flex flex-col overflow-y-auto">
     <Accordion autocollapse rounded= "rounded-none" class=" variant-ghost-error p-4">
         <!--Now to include the current 10 accordions-->
         {#each resultPages as resultPage (resultPage.ranking)} <!--Using key identification-->
@@ -88,7 +88,7 @@
                     # {resultPage.ranking}
                 </span></svelte:fragment>
             <svelte:fragment slot="summary">
-                <a href={resultPage.url} class="text-l underline">{resultPage.title}</a>
+                <a href={resultPage.url} class="text-l underline overflow-hidden">{resultPage.title}</a>
             </svelte:fragment>
             <svelte:fragment slot="content">
                 <!--Now to display the 10 keywords and 10 child urls-->
@@ -106,7 +106,16 @@
                         </div>
                     </div>
                     <div class= "childLinksContainer flex-1">
-                    
+                        <div class= "childLinksTitle text-center">
+                            <span class="text-l underline-offset-4 underline">Child Links</span>
+                        </div>
+                        <div class= "childLinksList flex justify-start">
+                            <ul>
+                                {#each resultPage.childLinks as childLink (childLink)}
+                                    <li><a href={childLink} class="underline">{childLink}</a></li>
+                                {/each}
+                            </ul>
+                        </div>
                     </div>
                 </div>
             </svelte:fragment>
@@ -114,20 +123,18 @@
 
         {/each}
     </Accordion>
-    <div class="flex flex-row justify-around">
-        {#if hasPrevious}
-            <button class="btn btn-primary">Previous</button>
-        {/if}
-        {#if hasNext}
-            <button class="btn btn-primary">Next</button>
-        {/if}
-    </div>
 </div>
 
 <style lang="scss">
 
     .contentContainer{
         font-family: "Rubik", sans-serif;
+    }
+
+    .childLinksContainer {
+        max-width: 50%;
+        text-overflow: ellipsis;
+        overflow: hidden;
     }
 
 </style>
