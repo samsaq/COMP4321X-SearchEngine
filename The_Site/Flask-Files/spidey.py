@@ -16,6 +16,7 @@ from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service
 from flask import Flask, Response, abort, jsonify, request
+from flask_cors import CORS
 from math import log
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import Column, Integer, Text, ForeignKey, func, PickleType
@@ -44,6 +45,8 @@ if debug and os.getcwd() != 'Flask-Files':
 
 # initializations
 app = Flask(__name__)
+app.debug = True
+CORS(app) # for cross-origin requests for the testing (big vuln for production)
 
 # detect what operating system is being used, and set the path to the chromedriver accordingly
 if sys.platform == 'win32':
@@ -600,9 +603,9 @@ def getWeightedVector(titleVector, contentVector, titleWeight=0.8, contentWeight
     return weightedVector
 
 # function to search based off of the given query
-@app.route('/api/search/<query>/', defaults={'numResults': 50}) # alt route to allow for default number of results
+# @app.route('/api/search/<query>', defaults={'numResults': 50}) # alt route to allow for default number of results
 @app.route('/api/search/<query>/<int:numResults>/')
-def search(query, numResults=50):
+def search(query="test", numResults=50):
     with app.app_context():
         # check that the query is not empty and not just whitespace
         if query == None or query.isspace():
@@ -690,8 +693,7 @@ def search(query, numResults=50):
             doc = session.query(PageVectors).filter_by(page_id=docID).one()
             unPickledVector = pickle.loads(doc.weighted_vector)
             docVectors[i] = unPickledVector
-            docSims.append((docID,  cosineSimilarity(queryVector.reshape(
-                1, -1), unPickledVector.reshape(1, -1)).flatten()[0]))
+            docSims.append((docID,  cosineSimilarity(queryVector, unPickledVector).flatten()[0]))
 
             # now to check phrases and do weighting for matches within the document
             # modifiers for title and content weighting is handled with the getWeightedVector function and is already done
@@ -754,9 +756,6 @@ def search(query, numResults=50):
                             docID, docSim = docSims[i]
                             docSim *= 1.025
                             docSims[i] = (docID, docSim)
-
-        # limit the values to be within the range of -1 and 1
-        docSims = np.clip(docSims, -1, 1)
 
         # sort the document similarities in descending order and get the top numResults
         sortedSims = sorted(docSims, key=lambda x: x[1], reverse=True)
@@ -1240,7 +1239,7 @@ if debug:
     targetVisited = 30
     if(not justSearching):
         triggerScraping(seedUrl, targetVisited)
-    testSearchQuery = 'Hong Kong University of Science and Technology "crawler" "Test Page" "officially certified academic"'
+    testSearchQuery = 'Movies are great "Dog Cat""'
     print(search(testSearchQuery))
 
 if __name__ == '__main__':

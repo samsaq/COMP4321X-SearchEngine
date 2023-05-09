@@ -65,8 +65,9 @@
 
     let curQuery: string = "";
     let waitingForSearch: boolean = true; // to trigger the loading animation
-
+    let loading = false; // to trigger the loading animation
     let searchHistoryArray: string[] = [];
+    let resultsJson: any;
 
     //function to append used search queries to the history store's searchHistory array
     function appendSearchQuery(newQuery: string) {
@@ -80,7 +81,8 @@
     //function to handle the search bar's submit event
     function submitQuery(event: Event) {
         event.preventDefault();
-        const targetUrl = "/api/search?q=${curQuery}";
+        const targetUrl =
+            "http://localhost:5000/api/search/" + curQuery + "/50/";
         if (curQuery !== "") {
             //if the query is not empty
             searchHistoryArray = get(searchHistory); //get the search history array from the store
@@ -90,6 +92,11 @@
                 appendSearchQuery(curQuery);
                 animateSearchHero();
                 //now to send and process the query
+                //for testing, send to localhost:5000/api/search?q=${curQuery}
+                loading = true;
+                //fetch the search results from the backend
+                awaitSearch(targetUrl);
+
             } // if the query has already been done, send a modal to the user
             else {
                 const oldQuery: ModalSettings = {
@@ -101,6 +108,30 @@
                 modalStore.trigger(oldQuery);
             }
         }
+    }
+
+    //function to await the backend
+    async function awaitSearch(targetUrl: string) {
+        fetch(targetUrl)
+            .then((response) => response.json())
+            .then((data) => {
+                //if the query has not been done before, send the results to the ResultAccordions component
+                //and set the loading variable to false
+                waitingForSearch = false;
+                loading = false;
+                resultsJson = data;
+            })
+            .catch((error) => {
+                //if there is an error, send a modal to the user
+                const errorModal: ModalSettings = {
+                    type: "alert",
+                    title: "Error!",
+                    body: "There was an error processing your search. Please reload the page.",
+                };
+                modalStore.trigger(errorModal);
+                waitingForSearch = false;
+                loading = false;
+            });
     }
 
     let heroAnimating: boolean = false;
@@ -117,7 +148,8 @@
             const searchBox = document.querySelector(".search-box");
             //transform the search box to the top of the page
             if (searchBox) {
-                (searchBox as HTMLElement).style.transform = "translateY(-60vh)";
+                (searchBox as HTMLElement).style.transform =
+                    "translateY(-60vh)";
                 resultsBroughtUp = true;
             }
         }
@@ -143,73 +175,6 @@
             curQuery = "";
         }
     }
-
-    const dummyJSON= {
-  "pages": [
-    {
-      "title": "Department of Computer Science and Engineering - HKUST",
-      "url": "https://cse.hkust.edu.hk/",
-      "lastModified": "Tue, 04 Apr 2023 15:03:31 GMT",
-      "topKeywords": {
-        "research": 14,
-        "hkust": 12,
-        "learn": 12,
-        "postgradu": 10,
-        "2023": 9
-      },
-      "childLinks": [
-        "https://hkust.edu.hk/news",
-        "https://hkust.edu.hk/academics/list",
-        "https://hkust.edu.hk/lifehkust",
-        "https://library.hkust.edu.hk/",
-        "https://hkust.edu.hk/visit"
-      ],
-      "content": "https://hkustcareers.hkust.edu.hk/\nhttps://facultyprofiles.hkust.edu.hk/\nhttps://hkust.edu.hk/about\nhttps://seng.hkust.edu.hk/\nhttps://hkust.edu.hk/"
-    },
-    {
-      "title": "News | The Hong Kong University of Science and Technology",
-      "url": "https://hkust.edu.hk/news",
-      "lastModified": "Tue, 04 Apr 2023 15:03:32 GMT",
-      "topKeywords": {
-        "hkust": 26,
-        "school": 18,
-        "scienc": 15,
-        "student": 15,
-        "research": 15
-      },
-      "childLinks": [
-        "https://hkust-gz.edu.cn/",
-        "https://shaw-auditorium.hkust.edu.hk/",
-        "https://calendar.ust.hk",
-        "https://giving.hkust.edu.hk/en/index.php",
-        "https://alum.hkust.edu.hk/home"
-      ],
-      "content": "https://hkustcareers.ust.hk/\nhttps://hkust.edu.hk/stu_intranet/\nhttps://my-ai.ust.hk\nhttps://hkust.edu.hk/\nhttps://science.ust.hk/"
-    },
-    {
-      "title": "Academic Departments | The Hong Kong University of Science and Technology",
-      "url": "https://hkust.edu.hk/academics/list",
-      "lastModified": "Tue, 04 Apr 2023 15:03:34 GMT",
-      "topKeywords": {
-        "center": 102,
-        "research": 70,
-        "institut": 45,
-        "hkust": 41,
-        "depart": 40
-      },
-      "childLinks": [
-        "https://hkust-gz.edu.cn/",
-        "https://shaw-auditorium.hkust.edu.hk/",
-        "https://calendar.ust.hk",
-        "https://giving.hkust.edu.hk/en/index.php",
-        "https://alum.hkust.edu.hk/home"
-      ],
-      "content": "https://hkustcareers.ust.hk/\nhttps://hkust.edu.hk/stu_intranet/\nhttps://my-ai.ust.hk\nhttps://hkust.edu.hk/\nhttps://science.ust.hk/"
-    }
-  ]
-}
-
-
 </script>
 
 <main>
@@ -291,8 +256,22 @@
             <!--on:blur triggers when focus is lost, clearing the search text-->
         </form>
     </div>
-    <div class="resultsHolder backdrop-blur-sm {heroAnimating ? 'broughtUp' : ''}">
-        <ResultAccordions resultsJSON={JSON.stringify(dummyJSON.pages)} />
+    <div
+        class="resultsHolder flex flex-col justify-center backdrop-blur-sm {heroAnimating
+            ? 'broughtUp'
+            : ''}"
+    >
+        {#if resultsJson}
+            <ResultAccordions resultsJSON={JSON.stringify(resultsJson.pages)} />
+        {:else}
+            <ProgressRadial
+                ...
+                stroke={100}
+                meter="stroke-primary-500"
+                track="stroke-primary-500/30"
+                class="flex justify-center items-center"
+            />
+        {/if}
     </div>
 </main>
 
@@ -336,12 +315,11 @@
         border-color: black;
         border-style: solid;
 
-        &.broughtUp{
+        &.broughtUp {
             transform: translate(-50%, -35%);
             transition: all 2s ease-in-out;
             transition-delay: 3s;
         }
-
     }
 
     #particles-container {
