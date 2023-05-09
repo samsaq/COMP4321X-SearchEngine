@@ -31,7 +31,8 @@ debug = False
 debugRefreshData = False
 scrapeRunning = False  # does this work when stateless?
 
-if debug and os.getcwd() != 'Flask-Files':
+if debug and os.path.basename(os.getcwd()) != 'Flask-Files':
+    print("current directory is: " + os.getcwd() + " Changing to Flask-Files directory...")
     found_directory = False
 
     for root, dirs, files in os.walk('.'):
@@ -377,7 +378,7 @@ class DatabaseInfo(db.Model):
 # function for API call to remake the database based off of the given parameters
 
 
-@app.route('/api/triggerScraping/<path:seedUrl>/<int:targetVisited>/', methods=['POST'])
+@app.route('/api/triggerScraping/<path:seedUrl>/<int:targetVisited>/')
 def triggerScraping(seedUrl, targetVisited):
     with app.app_context():
         global scrapeRunning
@@ -451,6 +452,7 @@ def triggerScraping(seedUrl, targetVisited):
         session.commit()
         session.close()
         driver.close()
+        print("Scrape complete")
     
 # function to take the exisitng database & precalculate the vectors via the TF-IDF algorithm
 # it will do so on a per page basis, and store the vectors in the database
@@ -1234,13 +1236,14 @@ def scrape(curUrl, targetVisited, parentID, bfsQueue, visited, driver, session):
 
 # debugging execution
 if debug:
-    justSearching = True
+    justSearching = False
     seedUrl = 'https://www.cse.ust.hk/~kwtleung/COMP4321/testpage.htm'
     targetVisited = 30
     if(not justSearching):
         triggerScraping(seedUrl, targetVisited)
-    testSearchQuery = 'Movies are great "Dog Cat""'
-    print(search(testSearchQuery))
-
-if __name__ == '__main__':
-    app.run()
+    else:
+        testSearchQuery = 'Movies are great "Dog Cat""'
+        print(search(testSearchQuery))
+if (not debug):
+    if __name__ == '__main__':
+        app.run()

@@ -81,8 +81,9 @@
     //function to handle the search bar's submit event
     function submitQuery(event: Event) {
         event.preventDefault();
-        const targetUrl =
-            "http://localhost:5000/api/search/" + curQuery + "/50/";
+        //if the curQuery is in the format: "URL:texthere, Number:numberhere", then we need to change the targetUrl
+        //check if the curQuery starts with URL
+        let  targetUrl = "http://localhost:5000/api/search/" + curQuery + "/50/";
         if (curQuery !== "") {
             //if the query is not empty
             searchHistoryArray = get(searchHistory); //get the search history array from the store
