@@ -1,36 +1,22 @@
-from ssl import SSLError
-import sys
-import os
 import re
-import hashlib
 import numpy as np
 import pickle
-from bs4 import BeautifulSoup
-from nltk import ngrams
 from nltk.stem import PorterStemmer
-from collections import deque, Counter
-from urllib.parse import urlparse, urlunparse, urljoin, urlencode, quote, parse_qs
-import requests
-import sqlite3
-from selenium import webdriver
-from selenium.webdriver.chrome.options import Options
-from selenium.webdriver.chrome.service import Service
-from flask import Flask, Response, abort, jsonify, request
+from collections import Counter
+from flask import Flask, jsonify
 from flask_cors import CORS
 from math import log
 from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy import Column, Integer, Text, ForeignKey, func, PickleType
+from sqlalchemy import func
 from sqlalchemy.orm.exc import NoResultFound
-#, Column, Integer, Text, ForeignKey, func, PickleType, NoResultFound
 from numpy import dot
 from numpy.linalg import norm
-from models import Page, PageVectors, Term, Bigram, Trigram, ParentLink, ChildLink, TitleIndex, ContentIndex, TitleTermPosition, ContentTermPosition, TitleTermFrequency, ContentTermFrequency, TitleBigramIndex, ContentBigramIndex, TitleTrigramIndex, ContentTrigramIndex, DatabaseInfo, Base
+from models import Page, PageVectors, Term, Bigram, Trigram, ChildLink, TitleIndex, ContentIndex, ContentTermFrequency, TitleBigramIndex, ContentBigramIndex, TitleTrigramIndex, ContentTrigramIndex, DatabaseInfo
 
 # a flask api to handle the searching of the database
 
 # these are global variables
 debug = False
-
 
 # initializations
 app = Flask(__name__)
@@ -45,82 +31,6 @@ with open('stopwords.txt', 'r') as f:
 
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///spidey.db'
 db = SQLAlchemy(app)
-
-# function to take a given page, and return the title and content vectors for the page
-def tfidfVector(session, pageID):
-    #fetch the page
-    page = session.query(Page).filter(Page.page_id == pageID).first()
-    title = page.title
-    content = page.content
-
-    # get the number of pages, title terms, and content terms (use titleIndex and contentIndex)
-    numPages = session.query(func.count(Page.page_id)).scalar()
-    numTitleTerms = session.query(func.count(TitleIndex.term_id)).scalar()
-    numContentTerms = session.query(func.count(ContentIndex.term_id)).scalar()
-    numTerms = session.query(func.count(Term.term_id)).scalar()
-
-    # tokenize, remove stopwords, and stem the title and content
-    titleTokens = re.findall(r'\b\w+\b', title.lower())
-    contentTokens = re.findall(r'\b\w+\b', content.lower())
-    
-    # remove stopwords from both title and content
-    titleTokens = [
-        token for token in titleTokens if token not in stopwords]
-    contentTokens = [
-        token for token in contentTokens if token not in stopwords]
-
-    # stem with porter's
-    ps = PorterStemmer()
-    titleStems = [ps.stem(token) for token in titleTokens]
-    contentStems = [ps.stem(token) for token in contentTokens]
-
-    # count frequency of each word, making a list of tuples (the tf of the tf-idf)
-    contentFreq = Counter(contentStems).most_common()
-    titleFreq = Counter(titleStems).most_common()
-
-    # create the title and content vectors
-    title_vector = np.zeros(numTerms)
-    content_vector = np.zeros(numTerms)
-
-    # we can use get_n(term) to get the n for a given term and use that to get the idf
-
-    # now to do the title vector
-    for term, freq in titleFreq:
-        # get the tf of the term using the titleFreq
-        tf = freq
-        # get the idf of the term using the get_n
-        if (get_n(term, session) == 0):
-            if (debug):
-                print("term: " + term + " has n = 0")
-            idf = 0
-        else:
-            idf = log(numPages / get_n(term, session))
-        tfidf = tf * idf
-        # get the index of the term as the term_id of the term in the database - 1
-        index = session.query(Term.term_id).filter(
-            Term.term == term).first()[0] - 1
-        # set the value of the vector at the index to the tfidf
-        title_vector[index] = tfidf
-    
-    # now to do the content vector
-    for term, freq in contentFreq:
-        # get the tf of the term using the contentFreq
-        tf = freq
-        # get the idf of the term using the get_n
-        if (get_n(term, session) == 0):
-            if (debug):
-                print("term: " + term + " has n = 0")
-            idf = 0
-        else:
-            idf = log(numPages / get_n(term, session))
-        tfidf = tf * idf
-        # get the index of the term as the term_id of the term in the database - 1
-        index = session.query(Term.term_id).filter(
-            Term.term == term).first()[0] - 1
-        # set the value of the vector at the index to the tfidf
-        content_vector[index] = tfidf
-
-    return title_vector, content_vector
 
 # function to take a given query and return the tfidf vector for the query
 # variant of the above function, but for a query instead of a page
@@ -179,7 +89,7 @@ def get_n(term, session):
     return n
 
 # function to search based off of the given query
-# @app.route('/api/search/<query>', defaults={'numResults': 50}) # alt route to allow for default number of results
+@app.route('/api/search/<query>', defaults={'numResults': 50}) # alt route to allow for default number of results
 @app.route('/api/search/<query>/<int:numResults>/')
 def search(query="test", numResults=50):
     with app.app_context():
@@ -282,8 +192,8 @@ def search(query="test", numResults=50):
                         trigramID = session.query(Trigram.trigram_id).filter_by(
                             term1_id=term1ID, term2_id=term2ID, term3_id=term3ID).one().trigram_id
                         # check if the trigram is in the document (if this page_id has this trigram_id)
-                        # we can check both TitleTrigramPosition and ContentTrigramPosition beacuse if its in one its in the document
-                        if session.query(TitleTrigramPosition).filter_by(page_id=docID, trigram_id=trigramID).count() == 0 and session.query(ContentTrigramPosition).filter_by(page_id=docID, trigram_id=trigramID).count() == 0:
+                        # we can check both TitleTrigramIndex and ContentTrigramIndex beacuse if its in one its in the document
+                        if session.query(TitleTrigramIndex).filter_by(page_id=docID, trigram_id=trigramID).count() == 0 and session.query(ContentTrigramIndex).filter_by(page_id=docID, trigram_id=trigramID).count() == 0:
                             docID, docSim = docSims[i]
                             docSim *= 0.9
                             docSims[i] = (docID, docSim)
@@ -302,8 +212,8 @@ def search(query="test", numResults=50):
                         bigramID = session.query(Bigram.bigram_id).filter_by(
                             term1_id=term1ID, term2_id=term2ID).one().bigram_id
                         # check if the bigram is in the document (if this page_id has this bigram_id)
-                        # we can check both TitleBigramPosition and ContentBigramPosition beacuse if its in one its in the document
-                        if session.query(TitleBigramPosition).filter_by(page_id=docID, bigram_id=bigramID).count() == 0 and session.query(ContentBigramPosition).filter_by(page_id=docID, bigram_id=bigramID).count() == 0:
+                        # we can check both TitleBigramIndex and ContentBigramIndex beacuse if its in one its in the document
+                        if session.query(TitleBigramIndex).filter_by(page_id=docID, bigram_id=bigramID).count() == 0 and session.query(ContentBigramIndex).filter_by(page_id=docID, bigram_id=bigramID).count() == 0:
                             docID, docSim = docSims[i]
                             docSim *= 0.95
                             docSims[i] = (docID, docSim)
