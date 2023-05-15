@@ -16,11 +16,11 @@ from models import Page, PageVectors, Term, Bigram, Trigram, ChildLink, TitleInd
 # a flask api to handle the searching of the database
 
 # these are global variables
-debug = False
+debug = True
 
 # initializations
 app = Flask(__name__)
-app.debug = True
+app.debug = debug
 CORS(app) # for cross-origin requests for the testing (big vuln for production)
 
 # stopword list, imported from a .txt file
