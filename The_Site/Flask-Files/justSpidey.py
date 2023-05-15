@@ -18,7 +18,7 @@ from math import log
 from sqlalchemy import func, create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.orm.exc import NoResultFound
-from models import Page, PageVectors, Term, Bigram, Trigram, ParentLink, ChildLink, TitleIndex, ContentIndex, TitleTermPosition, ContentTermPosition, TitleTermFrequency, ContentTermFrequency, DatabaseInfo, Base
+from models import Page, PageVectors, Term, Bigram, Trigram, ParentLink, ChildLink, TitleIndex, ContentIndex, TitleTermPosition, ContentTermPosition, TitleTermFrequency, ContentTermFrequency, TitleBigramIndex, ContentBigramIndex, TitleTrigramIndex, ContentTrigramIndex, DatabaseInfo, Base
 
 # creating a web scraper with selenium, beautifulsoup, and sqlite to get X pages from the given root url into a database setup for later searching
 
@@ -352,6 +352,68 @@ def generateBigramsTrigrams(session, pageID):
                 term1_id=term1_id, term2_id=term2_id, term3_id=term3_id)
             session.add(newTrigram)
             session.flush()
+
+    # loop through the title_bigrams and add them to the TitleBigramIndex for the page
+    # do so for the title_trigrams, content_bigrams, and content_trigrams as well with their tables
+    for bigram in title_bigrams:
+        term1, term2 = bigram
+        term1_id = session.query(Term.term_id).filter_by(
+            term=term1).one().term_id
+        term2_id = session.query(Term.term_id).filter_by(
+            term=term2).one().term_id
+        bigram_id = session.query(Bigram.bigram_id).filter_by(
+            term1_id=term1_id, term2_id=term2_id).one().bigram_id
+        # add the bigram to the TitleBigramIndex
+        newTitleBigramIndex = TitleBigramIndex(
+            page_id=pageID, bigram_id=bigram_id)
+        session.add(newTitleBigramIndex)
+        session.flush()
+    
+    for bigram in content_bigrams:
+        term1, term2 = bigram
+        term1_id = session.query(Term.term_id).filter_by(
+            term=term1).one().term_id
+        term2_id = session.query(Term.term_id).filter_by(
+            term=term2).one().term_id
+        bigram_id = session.query(Bigram.bigram_id).filter_by(
+            term1_id=term1_id, term2_id=term2_id).one().bigram_id
+        # add the bigram to the ContentBigramIndex
+        newContentBigramIndex = ContentBigramIndex(
+            page_id=pageID, bigram_id=bigram_id)
+        session.add(newContentBigramIndex)
+        session.flush()
+    
+    for trigram in title_trigrams:
+        term1, term2, term3 = trigram
+        term1_id = session.query(Term.term_id).filter_by(
+            term=term1).one().term_id
+        term2_id = session.query(Term.term_id).filter_by(
+            term=term2).one().term_id
+        term3_id = session.query(Term.term_id).filter_by(
+            term=term3).one().term_id
+        trigram_id = session.query(Trigram.trigram_id).filter_by(
+            term1_id=term1_id, term2_id=term2_id, term3_id=term3_id).one().trigram_id
+        # add the trigram to the TitleTrigramIndex
+        newTitleTrigramIndex = TitleTrigramIndex(
+            page_id=pageID, trigram_id=trigram_id)
+        session.add(newTitleTrigramIndex)
+        session.flush()
+    
+    for trigram in content_trigrams:
+        term1, term2, term3 = trigram
+        term1_id = session.query(Term.term_id).filter_by(
+            term=term1).one().term_id
+        term2_id = session.query(Term.term_id).filter_by(
+            term=term2).one().term_id
+        term3_id = session.query(Term.term_id).filter_by(
+            term=term3).one().term_id
+        trigram_id = session.query(Trigram.trigram_id).filter_by(
+            term1_id=term1_id, term2_id=term2_id, term3_id=term3_id).one().trigram_id
+        # add the trigram to the ContentTrigramIndex
+        newContentTrigramIndex = ContentTrigramIndex(
+            page_id=pageID, trigram_id=trigram_id)
+        session.add(newContentTrigramIndex)
+        session.flush()
 
     # session closed outside for clarity
     if (debug):

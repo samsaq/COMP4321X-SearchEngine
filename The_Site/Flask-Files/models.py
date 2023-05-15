@@ -84,8 +84,8 @@ class TitleTermFrequency(Base):
     term_id = Column(Integer, ForeignKey('Term.term_id'), primary_key=True)
     frequency = Column(Integer)
 
-    page = relationship("Page")
-    term = relationship("Term")
+    page = relationship("Page", foreign_keys=[page_id])
+    term = relationship("Term", foreign_keys=[term_id])
 
     def __init__(self, page_id, term_id, frequency):
         self.page_id = page_id
@@ -100,8 +100,8 @@ class ContentTermFrequency(Base):
     term_id = Column(Integer, ForeignKey('Term.term_id'), primary_key=True)
     frequency = Column(Integer)
 
-    page = relationship("Page")
-    term = relationship("Term")
+    page = relationship("Page", foreign_keys=[page_id])
+    term = relationship("Term", foreign_keys=[term_id])
 
     def __init__(self, page_id, term_id, frequency):
         self.page_id = page_id
@@ -116,8 +116,8 @@ class TitleTermPosition(Base):
     term_id = Column(Integer, ForeignKey('Term.term_id'), primary_key=True)
     position_list = Column(Text)
 
-    page = relationship("Page")
-    term = relationship("Term")
+    page = relationship("Page", foreign_keys=[page_id])
+    term = relationship("Term", foreign_keys=[term_id])
 
     def __init__(self, page_id, term_id, position_list):
         self.page_id = page_id
@@ -132,8 +132,8 @@ class ContentTermPosition(Base):
     term_id = Column(Integer, ForeignKey('Term.term_id'), primary_key=True)
     position_list = Column(Text)
 
-    page = relationship("Page")
-    term = relationship("Term")
+    page = relationship("Page", foreign_keys=[page_id])
+    term = relationship("Term", foreign_keys=[term_id])
 
     def __init__(self, page_id, term_id, position_list):
         self.page_id = page_id
@@ -147,8 +147,8 @@ class TitleIndex(Base):
     term_id = Column(Integer, ForeignKey('Term.term_id'), primary_key=True)
     page_id = Column(Integer, ForeignKey('Page.page_id'), primary_key=True)
 
-    term = relationship("Term")
-    page = relationship("Page")
+    term = relationship("Term", foreign_keys=[term_id])
+    page = relationship("Page", foreign_keys=[page_id])
 
     def __init__(self, term_id, page_id):
         self.term_id = term_id
@@ -161,8 +161,8 @@ class ContentIndex(Base):
     term_id = Column(Integer, ForeignKey('Term.term_id'), primary_key=True)
     page_id = Column(Integer, ForeignKey('Page.page_id'), primary_key=True)
 
-    term = relationship("Term")
-    page = relationship("Page")
+    term = relationship("Term", foreign_keys=[term_id])
+    page = relationship("Page", foreign_keys=[page_id])
 
     def __init__(self, term_id, page_id):
         self.term_id = term_id
@@ -179,6 +179,33 @@ class Bigram(Base):
     term1 = relationship("Term", foreign_keys=[term1_id])
     term2 = relationship("Term", foreign_keys=[term2_id])
 
+class TitleBigramIndex(Base):
+    __tablename__ = 'TitleBigramPosition'
+
+    page_id = Column(Integer, ForeignKey('Page.page_id'), primary_key=True)
+    bigram_id = Column(Integer, ForeignKey('Bigram.bigram_id'), primary_key=True)
+
+    page = relationship("Page", foreign_keys=[page_id])
+    bigram = relationship("Bigram", foreign_keys=[bigram_id])
+
+    def __init__(self, page_id, bigram_id):
+        self.page_id = page_id
+        self.bigram_id = bigram_id
+
+# define the ContentBigramPosition model
+class ContentBigramIndex(Base):
+    __tablename__ = 'ContentBigramPosition'
+
+    page_id = Column(Integer, ForeignKey('Page.page_id'), primary_key=True)
+    bigram_id = Column(Integer, ForeignKey('Bigram.bigram_id'), primary_key=True)
+
+    page = relationship("Page", foreign_keys=[page_id])
+    bigram = relationship("Bigram", foreign_keys=[bigram_id])
+
+    def __init__(self, page_id, bigram_id):
+        self.page_id = page_id
+        self.bigram_id = bigram_id
+
 # define the Trigram model
 class Trigram(Base):
     __tablename__ = 'Trigram'
@@ -192,6 +219,36 @@ class Trigram(Base):
     term2 = relationship("Term", foreign_keys=[term2_id])
     term3 = relationship("Term", foreign_keys=[term3_id])
 
+# define the TitleTrigramPosition model
+class TitleTrigramIndex(Base):
+    __tablename__ = 'TitleTrigramPosition'
+
+    page_id = Column(Integer, ForeignKey('Page.page_id'), primary_key=True)
+    trigram_id = Column(Integer, ForeignKey('Trigram.trigram_id'), primary_key=True)
+
+    page = relationship("Page", foreign_keys=[page_id])
+    trigram = relationship("Trigram", foreign_keys=[trigram_id])
+
+    def __init__(self, page_id, trigram_id):
+        self.page_id = page_id
+        self.trigram_id = trigram_id
+
+# define the ContentTrigramPosition model
+class ContentTrigramIndex(Base):
+    __tablename__ = 'ContentTrigramPosition'
+
+    page_id = Column(Integer, ForeignKey('Page.page_id'), primary_key=True)
+    trigram_id = Column(Integer, ForeignKey('Trigram.trigram_id'), primary_key=True)
+    position_list = Column(Text)
+    frequency = Column(Integer)
+
+    page = relationship("Page", foreign_keys=[page_id])
+    trigram = relationship("Trigram", foreign_keys=[trigram_id])
+
+    def __init__(self, page_id, trigram_id):
+        self.page_id = page_id
+        self.trigram_id = trigram_id
+
 # example copy command for future reference: "\COPY "PageVectors" FROM './PageVectors.csv' WITH (FORMAT CSV, HEADER);"
 # define the model for the PageVectors table
 class PageVectors(Base):
@@ -202,7 +259,7 @@ class PageVectors(Base):
     content_vector = Column(JSON, nullable=False)
     weighted_vector = Column(JSON, nullable=False)
 
-    page = relationship("Page")
+    page = relationship("Page", foreign_keys=[page_id])
 
     def __init__(self, page_id, title_vector, content_vector, weighted_vector):
         self.page_id = page_id
