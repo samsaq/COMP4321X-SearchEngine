@@ -1,6 +1,9 @@
 # SearchEngine-Website
 Repo for the Search Engine project I'm working on, with its accompnaying website & spider
 
+## Branch Scope
+This branch exists to setup the flask backend for deployment via fly.io to run on the cloud
+
 ## Instructions for Testing of Both site and spider together
 1. Get the Files
 2. Install the requirements - Website
