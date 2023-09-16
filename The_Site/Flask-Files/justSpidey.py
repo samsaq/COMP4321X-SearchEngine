@@ -366,8 +366,13 @@ def generateBigramsTrigrams(session, pageID):
         # add the bigram to the TitleBigramIndex
         newTitleBigramIndex = TitleBigramIndex(
             page_id=pageID, bigram_id=bigram_id)
-        session.add(newTitleBigramIndex)
-        session.flush()
+        # check if a matching bigram already exists for the page
+        bigramExists = session.query(TitleBigramIndex).filter_by(
+            page_id=pageID, bigram_id=bigram_id).first()
+        # if it doesn't exist, add it to the database
+        if bigramExists is None:
+            session.add(newTitleBigramIndex)
+            session.flush()
     
     for bigram in content_bigrams:
         term1, term2 = bigram
@@ -380,8 +385,13 @@ def generateBigramsTrigrams(session, pageID):
         # add the bigram to the ContentBigramIndex
         newContentBigramIndex = ContentBigramIndex(
             page_id=pageID, bigram_id=bigram_id)
-        session.add(newContentBigramIndex)
-        session.flush()
+        # check if a matching bigram already exists for the page
+        bigramExists = session.query(ContentBigramIndex).filter_by(
+            page_id=pageID, bigram_id=bigram_id).first()
+        # if it doesn't exist, add it to the database
+        if bigramExists is None:
+            session.add(newContentBigramIndex)
+            session.flush()
     
     for trigram in title_trigrams:
         term1, term2, term3 = trigram
@@ -396,8 +406,13 @@ def generateBigramsTrigrams(session, pageID):
         # add the trigram to the TitleTrigramIndex
         newTitleTrigramIndex = TitleTrigramIndex(
             page_id=pageID, trigram_id=trigram_id)
-        session.add(newTitleTrigramIndex)
-        session.flush()
+        # check if a matching trigram already exists for the page
+        trigramExists = session.query(TitleTrigramIndex).filter_by(
+            page_id=pageID, trigram_id=trigram_id).first()
+        # if it doesn't exist, add it to the database
+        if trigramExists is None:
+            session.add(newTitleTrigramIndex)
+            session.flush()
     
     for trigram in content_trigrams:
         term1, term2, term3 = trigram
@@ -412,8 +427,13 @@ def generateBigramsTrigrams(session, pageID):
         # add the trigram to the ContentTrigramIndex
         newContentTrigramIndex = ContentTrigramIndex(
             page_id=pageID, trigram_id=trigram_id)
-        session.add(newContentTrigramIndex)
-        session.flush()
+        # check if a matching trigram already exists for the page
+        trigramExists = session.query(ContentTrigramIndex).filter_by(
+            page_id=pageID, trigram_id=trigram_id).first()
+        # if it doesn't exist, add it to the database
+        if trigramExists is None:
+            session.add(newContentTrigramIndex)
+            session.flush()
 
     # session closed outside for clarity
     if (debug):
