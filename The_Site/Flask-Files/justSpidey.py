@@ -22,21 +22,21 @@ from models import Page, PageVectors, Term, Bigram, Trigram, ParentLink, ChildLi
 
 # creating a web scraper with selenium, beautifulsoup, and sqlite to get X pages from the given root url into a database setup for later searching
 
-debug = False
+debug = True
 
-if debug and os.path.basename(os.getcwd()) != 'spidey':
+if debug and os.path.basename(os.getcwd()) != 'Spidey':
     print("current directory is: " + os.getcwd() +
-          " Changing to spidey directory...")
+          " Changing to Spidey directory...")
     found_directory = False
 
     for root, dirs, files in os.walk('.'):
-        if 'spidey' in dirs:
-            os.chdir(os.path.join(root, 'spidey'))
+        if 'Spidey' in dirs:
+            os.chdir(os.path.join(root, 'Spidey'))
             found_directory = True
             break
 
     if not found_directory:
-        raise FileNotFoundError("The spidey directory was not found.")
+        raise FileNotFoundError("The Spidey directory was not found.")
 
 # detect what operating system is being used, and set the path to the chromedriver accordingly
 if sys.platform == 'win32':
