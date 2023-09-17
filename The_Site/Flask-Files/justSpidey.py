@@ -752,7 +752,7 @@ def scrape(curUrl, targetVisited, parentID, bfsQueue, visited, driver, session):
 # debugging execution
 if debug:
     seedUrl = 'https://www.cse.ust.hk/~kwtleung/COMP4321/testpage.htm'
-    targetVisited = 30
+    targetVisited = 300
     triggerScraping(seedUrl, targetVisited)
 
 if __name__ == '__main__' and not debug:

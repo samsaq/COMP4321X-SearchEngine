@@ -249,7 +249,6 @@ class ContentTrigramIndex(Base):
         self.page_id = page_id
         self.trigram_id = trigram_id
 
-# example copy command for future reference: "\COPY "PageVectors" FROM './PageVectors.csv' WITH (FORMAT CSV, HEADER);"
 # define the model for the PageVectors table
 class PageVectors(Base):
     __tablename__ = 'PageVectors'
