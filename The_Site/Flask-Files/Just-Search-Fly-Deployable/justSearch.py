@@ -1,6 +1,7 @@
+import os
 import re
 import numpy as np
-import pickle
+import json
 from nltk.stem import PorterStemmer
 from collections import Counter
 from flask import Flask, jsonify
@@ -16,12 +17,12 @@ from models import Page, PageVectors, Term, Bigram, Trigram, ChildLink, TitleInd
 # a flask api to handle the searching of the database
 
 # these are global variables
-debug = True
+debug = False
 
 # initializations
 app = Flask(__name__)
 app.debug = debug
-CORS(app) # for cross-origin requests
+CORS(app)  # for cross-origin requests
 
 # stopword list, imported from a .txt file
 stopwords = []
@@ -29,11 +30,14 @@ with open('stopwords.txt', 'r') as f:
     for line in f:
         stopwords.append(line.strip())
 
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///spidey.db'
+db_path = os.path.abspath("spidey.db")
+app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{db_path}'
 db = SQLAlchemy(app)
 
 # function to take a given query and return the tfidf vector for the query
 # variant of the above function, but for a query instead of a page
+
+
 def tfidfQueryVector(query, session):
     # get global database info
     numPages = session.query(DatabaseInfo.num_pages).first()[0]
@@ -71,9 +75,12 @@ def tfidfQueryVector(query, session):
     return queryVector
 
 # helper function for the above two - gets the number of pages that contain the given term
+
+
 def get_n(term, session):
     # get the term_id of the term
-    term_id = session.query(Term.term_id).filter(Term.term == term).one().term_id
+    term_id = session.query(Term.term_id).filter(
+        Term.term == term).one().term_id
     # get the number of titles and contents that contain the term
     title_docs = session.query(TitleIndex.page_id).filter(
         TitleIndex.term_id == term_id).all()
@@ -89,7 +96,10 @@ def get_n(term, session):
     return n
 
 # function to search based off of the given query
-@app.route('/api/search/<query>', defaults={'numResults': 50}) # alt route to allow for default number of results
+
+
+# alt route to allow for default number of results
+@app.route('/api/search/<query>', defaults={'numResults': 50})
 @app.route('/api/search/<query>/<int:numResults>/')
 def search(query="test", numResults=50):
     with app.app_context():
@@ -101,7 +111,8 @@ def search(query="test", numResults=50):
         # preprocess the query string for the search
         queryTokens = re.findall(r'\b\w+\b', query.lower())
         # remove stopwords from the query
-        queryTokens = [token for token in queryTokens if token not in stopwords]
+        queryTokens = [
+            token for token in queryTokens if token not in stopwords]
         # stem the query
         ps = PorterStemmer()
 
@@ -118,7 +129,8 @@ def search(query="test", numResults=50):
         # remove stopwords and stem the phrases
         for i in range(len(searchPhrases)):
             phraseTokens = re.findall(r'\b\w+\b', searchPhrases[i].lower())
-            phraseTokens = [token for token in phraseTokens if token not in stopwords]
+            phraseTokens = [
+                token for token in phraseTokens if token not in stopwords]
             ps = PorterStemmer()
             phraseStems = [ps.stem(token) for token in phraseTokens]
             searchPhrases[i] = ' '.join(phraseStems)
@@ -170,9 +182,10 @@ def search(query="test", numResults=50):
         for i in range(numDocs):
             docID = i + 1
             doc = session.query(PageVectors).filter_by(page_id=docID).one()
-            unPickledVector = pickle.loads(doc.weighted_vector)
+            unPickledVector = json.loads(doc.weighted_vector)
             docVectors[i] = unPickledVector
-            docSims.append((docID,  cosineSimilarity(queryVector, unPickledVector).flatten()[0]))
+            docSims.append((docID,  cosineSimilarity(
+                queryVector, unPickledVector).flatten()[0]))
 
             # now to check phrases and do weighting for matches within the document
             # modifiers for title and content weighting is handled with the getWeightedVector function and is already done
@@ -243,11 +256,14 @@ def search(query="test", numResults=50):
         # convert the top results to JSON and return it
         convertedResults = convertTopResultsToJSON(topResults)
         return jsonify({"pages": convertedResults}), 200
-    
+
+
 def cosineSimilarity(a, b):
     return dot(a.T, b) / (norm(a) * norm(b))
 
 # get the demarcated phrases from the query (marked by double quotes)
+
+
 def extractPhrases(query):
     # Use regular expression to extract phrases enclosed in double quotes
     pattern = r'"([^"]*)"'
@@ -261,6 +277,8 @@ def extractPhrases(query):
 # take the top results from the search and convert them to JSON
 # use the id to get the data
 # we need the title, url, last modified date, top 10 keywords and their frequencies, the first 10 child links, and page content
+
+
 def convertTopResultsToJSON(topResults):
     session = db.session
     resultJSONs = []
@@ -270,14 +288,15 @@ def convertTopResultsToJSON(topResults):
         # get the top 10 keywords and their frequencies
         topKeywords = session.query(Term.term, ContentTermFrequency.frequency).join(ContentTermFrequency).filter(
             ContentTermFrequency.page_id == docID).order_by(ContentTermFrequency.frequency.desc()).limit(10).all()
-        
+
         # make sure topKeywords is a list of strings
-        topKeywords = [(str(keyword[0]), int(keyword[1])) for keyword in topKeywords]
+        topKeywords = [(str(keyword[0]), int(keyword[1]))
+                       for keyword in topKeywords]
 
         # get the first 10 child links
         childLinks = session.query(ChildLink).filter_by(
             page_id=docID).limit(10).all()
-        
+
         # get the urls of the child links as a list for the JSON
         childLinks = [childLink.child_url for childLink in childLinks]
 
@@ -301,6 +320,7 @@ def convertTopResultsToJSON(topResults):
         resultJSONs.append(pageJSON)
 
     return resultJSONs
+
 
 # debugging execution
 if debug:
