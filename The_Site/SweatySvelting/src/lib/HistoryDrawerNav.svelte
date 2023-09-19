@@ -1,8 +1,9 @@
 <script lang="ts">
     import { onMount, onDestroy } from "svelte";
     import { searchHistory, searchQuery } from "../historyStore";
-    import { drawerStore } from "@skeletonlabs/skeleton";
+    import { getDrawerStore } from "@skeletonlabs/skeleton";
 
+    const drawerStore = getDrawerStore();
     let searchHistoryLength: number = 0;
     let searchHistoryArray: string[] = [];
     let unSubSearchHistory: () => void;

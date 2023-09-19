@@ -1,11 +1,11 @@
 <script lang="ts">
 	//required theme imports, in required order, for a custom theme
-	import "../theme.postcss";
-	import "@skeletonlabs/skeleton/styles/all.css";
 	import "../app.postcss";
 
-	import { AppShell, Drawer, Modal } from "@skeletonlabs/skeleton";
+	import { AppShell, Drawer, Modal, initializeStores } from "@skeletonlabs/skeleton";
 	import HistoryDrawerNav from "$lib/HistoryDrawerNav.svelte";
+
+	initializeStores();
 </script>
 
 <Modal rounded="rounded-none" buttonNeutral="rounded-none border-solid"/>

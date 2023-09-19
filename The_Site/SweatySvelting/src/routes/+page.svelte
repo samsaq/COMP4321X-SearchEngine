@@ -1,6 +1,5 @@
 <script lang="ts">
-    import type { errors } from "@playwright/test";
-    import { onMount, onDestroy } from "svelte";
+    import { onMount } from "svelte";
 
     onMount(() => {
         const left = document.getElementById("left-side")!;
@@ -36,9 +35,9 @@
 
 <style lang="postcss">
     :root {
-        --black: rgb(var(--color-surface-500));
-        --gold: rgb(var(--color-primary-500));
-        --white: rgb(var(--color-error-500));
+        --black: rgb(25 25 25);
+        --gold: rgb(193 165 32);
+        --white: rgb(255 255 255);
 
         --left-color: var(--black);
         --right-color: var(--white);
@@ -57,6 +56,13 @@
         position: absolute;
         width: 100%;
         text-align: center;
+    }
+
+    .fancy {
+        /*Add a gold underline to the text*/
+        text-decoration-line: underline;
+        text-decoration-color: var(--gold);
+        text-decoration-thickness: 0.75rem;
     }
 
     .side .title {
