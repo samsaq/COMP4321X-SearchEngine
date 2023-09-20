@@ -4,8 +4,8 @@
     import {
         AppBar,
         ProgressRadial,
-        drawerStore,
-        modalStore,
+        getDrawerStore,
+        getModalStore,
     } from "@skeletonlabs/skeleton";
     import type { DrawerSettings, ModalSettings } from "@skeletonlabs/skeleton";
     import { get } from "svelte/store";
@@ -18,6 +18,8 @@
     import ResultAccordions from "$lib/ResultAccordions.svelte";
 
     let ParticlesComponent: any;
+    const drawerStore = getDrawerStore();
+    const modalStore = getModalStore();
 
     const particlesConfig = {
         particles: {
@@ -83,7 +85,7 @@
         event.preventDefault();
         //if the curQuery is in the format: "URL:texthere, Number:numberhere", then we need to change the targetUrl
         //check if the curQuery starts with URL
-        let  targetUrl = "http://localhost:5000/api/search/" + curQuery + "/50/";
+        let  targetUrl = "https://search-engine-api.fly.dev/api/search/" + curQuery + "/50/";
         if (curQuery !== "") {
             //if the query is not empty
             searchHistoryArray = get(searchHistory); //get the search history array from the store
@@ -336,7 +338,7 @@
 
         .fancy {
             font-family: "Lobster", cursive;
-            color: rgb(var(--color-primary-500));
+            color: rgb(193 165 32);
         }
 
         .animate-search-step {

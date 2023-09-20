@@ -13,11 +13,14 @@
 	},
 	"devDependencies": {
 		"@playwright/test": "^1.38.0",
+		"@skeletonlabs/skeleton": "^2.1.0",
+		"@skeletonlabs/tw-plugin": "^0.2.0",
 		"@sveltejs/adapter-auto": "^2.1.0",
 		"@sveltejs/kit": "^1.25.0",
 		"@tailwindcss/forms": "^0.5.6",
 		"@tailwindcss/typography": "^0.5.10",
 		"@types/animejs": "^3.1.7",
+		"@types/node": "^20.6.2",
 		"autoprefixer": "^10.4.15",
 		"postcss": "^8.4.29",
 		"postcss-apply": "^0.12.0",
@@ -35,7 +38,6 @@
 	},
 	"type": "module",
 	"dependencies": {
-		"@skeletonlabs/skeleton": "^2.1.0",
 		"animejs": "^3.2.1",
 		"iconify-icon": "^1.0.8",
 		"svelte-particles": "^2.12.0",
