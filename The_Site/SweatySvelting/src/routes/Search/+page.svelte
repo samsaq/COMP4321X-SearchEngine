@@ -125,6 +125,7 @@
                 resultsJson = data;
             })
             .catch((error) => {
+                console.log("Error: " + error);
                 //if there is an error, send a modal to the user
                 const errorModal: ModalSettings = {
                     type: "alert",
