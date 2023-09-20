@@ -125,6 +125,7 @@
                 resultsJson = data;
             })
             .catch((error) => {
+                console.log("Error: " + error + " while fetching " + targetUrl);
                 //if there is an error, send a modal to the user
                 const errorModal: ModalSettings = {
                     type: "alert",
