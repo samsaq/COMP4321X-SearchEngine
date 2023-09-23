@@ -6,12 +6,12 @@ COPY . /
 RUN pip3 install --upgrade pip
 RUN pip3 install -r requirements.txt
 RUN sudo apt-get install nginx -y
-RUN sudo systemctl start nginx
+RUN sudo ln -s /etc/nginx/sites-available/search-engine-api.conf /etc/nginx/sites-enabled/
 RUN sudo apt install snapd -y
-RUN reboot
 RUN sudo snap install --classic certbot
 RUN sudo ln -s /snap/bin/certbot /usr/bin/certbot
-
+RUN reboot
+RUN sudo systemctl start nginx
 
 EXPOSE 8080
 
