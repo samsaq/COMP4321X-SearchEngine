@@ -13,6 +13,7 @@ from sqlalchemy.orm.exc import NoResultFound
 from numpy import dot
 from numpy.linalg import norm
 from models import Page, PageVectors, Term, Bigram, Trigram, ChildLink, TitleIndex, ContentIndex, ContentTermFrequency, TitleBigramIndex, ContentBigramIndex, TitleTrigramIndex, ContentTrigramIndex, DatabaseInfo
+from flask_talisman import Talisman
 
 # a flask api to handle the searching of the database
 
@@ -21,6 +22,7 @@ debug = False
 
 # initializations
 app = Flask(__name__)
+Talisman(app, content_security_policy=None)
 app.debug = debug
 CORS(app)  # for cross-origin requests
 
