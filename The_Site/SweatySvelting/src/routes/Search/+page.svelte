@@ -85,7 +85,7 @@
         event.preventDefault();
         //if the curQuery is in the format: "URL:texthere, Number:numberhere", then we need to change the targetUrl
         //check if the curQuery starts with URL
-        let  targetUrl = "https://search-engine-api.fly.dev/api/search/" + curQuery + "/50/";
+        let  targetUrl = "https://www.search-engine-api.rest/api/search/" + curQuery + "/50/";
         if (curQuery !== "") {
             //if the query is not empty
             searchHistoryArray = get(searchHistory); //get the search history array from the store
@@ -125,7 +125,7 @@
                 resultsJson = data;
             })
             .catch((error) => {
-                console.log("Error: " + error);
+                console.log("Error: " + error + " while fetching " + targetUrl);
                 //if there is an error, send a modal to the user
                 const errorModal: ModalSettings = {
                     type: "alert",
