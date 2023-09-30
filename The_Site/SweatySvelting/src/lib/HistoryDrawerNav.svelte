@@ -31,23 +31,19 @@
 </script>
 
 <div class="flex flex-col justify-start items-center drawerContainer">
-    {#if searchHistoryLength <= 0}
-        <span class="text-l py-4 underline-offset-4 underline">You haven't searched anything yet</span>
-    {:else}
         <span class="text-xl py-4 underline-offset-4 underline search-history-hero">Search History</span>
         <nav class="list-nav">
             <ul>
                 {#each searchHistoryArray as Query}
                     <li class= "flex justify-center py-2">
                         <button
-                            class="btn variant-form-material"
+                            class="btn variant-form-material decoration-black"
                             on:click={setSearchQuery(Query)}>{Query}</button
                         >
                     </li>
                 {/each}
             </ul>
         </nav>
-    {/if}
 </div>
 
 <style lang="postcss">

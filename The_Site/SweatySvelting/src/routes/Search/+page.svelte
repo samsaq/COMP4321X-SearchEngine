@@ -1,6 +1,5 @@
 <script lang="ts">
     import { onMount, onDestroy } from "svelte";
-    import SearchBarAndPaginator from "$lib/SearchBarAndPaginator.svelte";
     import {
         AppBar,
         ProgressRadial,

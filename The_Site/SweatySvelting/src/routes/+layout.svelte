@@ -10,7 +10,7 @@
 
 <Modal rounded="rounded-none" buttonNeutral="rounded-none border-solid"/>
 
-<Drawer width="w-1/4" rounded="rounded-none">
+<Drawer width="w-1/4" rounded="rounded-none" bgDrawer="bg-gray-100 bg-opacity-75">
 	<HistoryDrawerNav />
 </Drawer>
 
