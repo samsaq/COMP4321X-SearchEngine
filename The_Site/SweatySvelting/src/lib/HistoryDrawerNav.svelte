@@ -1,12 +1,13 @@
 <script lang="ts">
     import { onMount, onDestroy } from "svelte";
     import { searchHistory, searchQuery } from "../historyStore";
-    import { getDrawerStore } from "@skeletonlabs/skeleton";
+    import { getDrawerStore} from "@skeletonlabs/skeleton";
 
     const drawerStore = getDrawerStore();
     let searchHistoryLength: number = 0;
     let searchHistoryArray: string[] = [];
     let unSubSearchHistory: () => void;
+    let valueSingle: string = 'selectedQuery';
 
     //when the user clicks on a search history item, set the search query to that item
     //we'll have the search display component listening to the search query in the store to react
@@ -37,7 +38,7 @@
                 {#each searchHistoryArray as Query}
                     <li class= "flex justify-center py-2">
                         <button
-                            class="btn variant-form-material decoration-black"
+                            class="btn variant-ringed-primary underline-offset-2 decoration-yellow-500 text-black"
                             on:click={setSearchQuery(Query)}>{Query}</button
                         >
                     </li>
@@ -57,6 +58,7 @@
         font-size: 3rem;
         padding-bottom: 2rem;
         text-decoration: rgb(var(--color-primary-500)) underline;
+        color: rgba(0, 0, 0, 0.75);
     }
 
 </style>
