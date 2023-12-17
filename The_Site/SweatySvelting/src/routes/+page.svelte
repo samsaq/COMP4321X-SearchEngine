@@ -8,7 +8,11 @@
   } from "@skeletonlabs/skeleton";
   import type { ModalSettings } from "@skeletonlabs/skeleton";
   import { get } from "svelte/store";
-  import { searchHistory, searchQuery } from "../historyStore";
+  import {
+    searchHistory,
+    searchQuery,
+    selectedOldQuery,
+  } from "../historyStore";
   import "iconify-icon";
   import type { Engine } from "tsparticles-engine";
   import { loadFull } from "tsparticles";
@@ -63,10 +67,25 @@
   });
 
   let curQuery: string = "";
+  $: selectedHistoryQuery = $selectedOldQuery;
   let waitingForSearch: boolean = true; // to trigger the loading animation
   let loading = false; // to trigger the loading animation
   let searchHistoryArray: string[] = [];
   let resultsJson: any;
+
+  //function run when the selectedOldQuery store is updated, to run the query
+  $: if (selectedHistoryQuery !== "") {
+    //if the selectedHistoryQuery is not empty
+    curQuery = selectedHistoryQuery;
+    animateSearchHero();
+    //now to send and process the query
+    //for testing, send to localhost:5000/api/search?q=${curQuery}
+    loading = true;
+    //fetch the search results from the backend
+    let targetUrl =
+      "https://www.search-engine-api.rest/api/search/" + curQuery + "/50/";
+    awaitSearch(targetUrl);
+  }
 
   //function to append used search queries to the history store's searchHistory array
   function appendSearchQuery(newQuery: string) {
@@ -180,14 +199,14 @@
 <main>
   <AppBar background="variant-ghost-error">
     <svelte:fragment slot="lead">
-      <a href="/">
+      <button class="btn" on:click={() => location.reload()}>
         <iconify-icon
           icon="ic:outline-home"
           height="2rem"
           width="2rem"
           style="color: #000000"
         />
-      </a>
+      </button>
     </svelte:fragment>
     <svelte:fragment slot="trail">
       <!--We'll put the hamburger for the history menu here-->
@@ -255,7 +274,7 @@
       ? 'broughtUp'
       : ''}"
   >
-    {#if resultsJson}
+    {#if resultsJson && !waitingForSearch && !loading}
       <ResultAccordions resultsJSON={JSON.stringify(resultsJson.pages)} />
     {:else}
       <div>

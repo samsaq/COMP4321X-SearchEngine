@@ -67,7 +67,7 @@
   processJSON(resultsJSON);
 </script>
 
-<div class="accordionsContainer flex flex-col overflow-y-auto">
+<div class="accordionsContainer flex flex-col overflow-y-auto w-full">
   <Accordion
     autocollapse
     rounded="rounded-none"
