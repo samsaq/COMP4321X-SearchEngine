@@ -8,9 +8,9 @@
 	initializeStores();
 </script>
 
-<Modal rounded="rounded-none" buttonNeutral="rounded-none border-solid"/>
+<Modal class= "text-black" rounded="rounded-none border-solid" buttonNeutral="rounded-none" background="bg-gray-100"/>
 
-<Drawer width="w-1/4" rounded="rounded-none">
+<Drawer width="w-1/4 min-w-[300px]" rounded="rounded-none" bgDrawer="bg-gray-300 bg-opacity-75">
 	<HistoryDrawerNav />
 </Drawer>
 
